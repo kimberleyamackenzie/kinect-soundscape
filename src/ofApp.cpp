@@ -31,12 +31,17 @@ void ofApp::setup(){
         player.setMultiPlay(true);
         pianoNotes.push_back(player);
     }
+    
+    k = 0;
+    frame = 0;
+
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     
     kinect.update();
+    frame += 1;
 }
 
 //--------------------------------------------------------------
@@ -203,6 +208,32 @@ void ofApp::draw(){
             //          line.addVertex(handPosition.x, handPosition.y);
             //          ofDrawLine(handPosition.x, handPosition.y, 50, 50);
             
+            position.set(hand.getPosition().x, hand.getPosition().y);
+            mathVectors.push_back(position);
+            
+
+            if(frame % 120 == 0){
+                diff = mathVectors[k] + mathVectors[k - 1];
+                angle = mathVectors[k - 120].angle(mathVectors[k]);
+                cout << angle << endl;
+
+            }
+            
+              ofPoint pt;
+              pt.set(handPosition.x, handPosition.y);
+              line.addVertex(handPosition.x, handPosition.y);
+              ofDrawLine(handPosition.x, handPosition.y, 50, 50);
+            
+            if (line.size() > 200){
+                line.getVertices().erase(
+                                         line.getVertices().begin()
+                                         );
+            }
+            
+
+            
+            k += 1;
+            
             // In increments of 7 (because 1 was too small and 10 seemed like too much 'empty' space/sound, iterate through the stops of the x axis of the Kinect's field of view
             for (int xX = 0; xX < 700; xX += 7){
                 
@@ -308,6 +339,10 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 //--------------------------------------------------------------
 
 void ofApp::handEvent(ofxOpenNIGestureEvent & event){
+    //    kinect.stop();
+    if(event.gestureName == "Wave"){
+        kinect.stop();
+    }
     
-    cout<<"eventing"<<endl;
+    cout << event.gestureName << endl;
 }

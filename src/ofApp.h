@@ -30,6 +30,14 @@ public:
     
     ofPolyline line;
     
+    vector<ofVec2f> mathVectors;
+
+    int k;
+    int frame;
+    ofVec2f diff;
+    ofVec2f position;
+    float angle;
+
     
     ofxOpenNI kinect;
     bool mode;
