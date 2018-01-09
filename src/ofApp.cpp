@@ -13,6 +13,10 @@ void ofApp::setup(){
     
     kinect.addHandsGenerator();
     kinect.addAllHandFocusGestures();
+    kinect.addGestureGenerator();
+    
+    ofAddListener(kinect.gestureEvent,this,&ofApp::handEvent);
+    
     kinect.setMaxNumHands(2);
     
     kinect.start();
@@ -65,26 +69,31 @@ void ofApp::draw(){
         
         ofSetColor(255);
         
-        
-        //        ofxOpenNIHand & hand = kinect.getTrackedHand(0);
-        //        ofPoint & handPosition = hand.getPosition();
-        //
-        //        ofxOpenNIJoint joint = user.getJoint((enum Joint)JOINT_RIGHT_ELBOW);
-        //
-        //        if((handPosition.y > joint.getProjectivePosition().y &&  handPosition.x > joint.getProjectivePosition().x) || gestureStatusOne == true){
-        //            gestureStatusOne == true;
-        //            if(handPosition.y > joint.getProjectivePosition().y &&  handPosition.x < joint.getProjectivePosition().x){
-        //                gestureStatusTwo == true;
-        //            }
-        //        }
-        //
-        //        if(gestureStatusOne && gestureStatusTwo){
-        //            cout << "waving gesture recognized booyah" << endl;
-        //            gestureStatusOne = false;
-        //            gestureStatusTwo = false;
-        //        }
-        
-        
+//        
+//                ofxOpenNIHand & trackedHand = kinect.getTrackedHand(0);
+//                ofPoint &  trackedHandPosition = trackedHand.getPosition();
+//        
+//                ofxOpenNIJoint trackedJoint = user.getJoint(JOINT_RIGHT_ELBOW);
+//        
+//        cout << "tracked hand y is " << trackedHandPosition.y << "tracked elbow y is " << trackedJoint.getProjectivePosition().y << endl;
+//        cout << trackedJoint.getProjectivePosition().y << endl;
+//        cout << gestureStatusOne << endl;
+//
+//        
+//                if((trackedHandPosition.y > trackedJoint.getProjectivePosition().y &&  trackedHandPosition.x > trackedJoint.getProjectivePosition().x) || gestureStatusOne == true){
+//                    gestureStatusOne == true;
+//                    if(trackedHandPosition.y > trackedJoint.getProjectivePosition().y &&  trackedHandPosition.x < trackedJoint.getProjectivePosition().x){
+//                        gestureStatusTwo == true;
+//                    }
+//                }
+//        
+//                if(gestureStatusOne && gestureStatusTwo){
+//                    cout << "waving gesture recognized booyah" << endl;
+//                    gestureStatusOne = false;
+//                    gestureStatusTwo = false;
+//                }
+//        
+//        
         // For the total count of limbs that the Kinect identifies on the user
         for(int i = 0; i < user.getNumLimbs(); i ++){
             // Go through the ofxOpenNI collection of limbs
@@ -291,7 +300,14 @@ void ofApp::gotMessage(ofMessage msg){
 }
 
 //--------------------------------------------------------------
+
 void ofApp::dragEvent(ofDragInfo dragInfo){
     
 }
 
+//--------------------------------------------------------------
+
+void ofApp::handEvent(ofxOpenNIGestureEvent & event){
+    
+    cout<<"eventing"<<endl;
+}

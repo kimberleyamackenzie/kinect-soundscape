@@ -21,8 +21,8 @@ public:
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
-    
-    void handEvent(ofxOpenNIHandEvent & event);
+    void handEvent(ofxOpenNIGestureEvent & event);
+
     
     ofSoundPlayer   tuning;
     vector<ofSoundPlayer>   pianoNotes;
