@@ -66,11 +66,14 @@ void ofApp::draw(){
     //    ofTranslate(200, 50, - 100);
     
     // As long as there is a least one person being tracked...
+    
     if(kinect.getNumTrackedUsers() > 0 ){
+     for(int m = 0; m < kinect.getNumTrackedUsers(); m ++){
+
         line.draw();
         
         // Make that user the person who's skeleton we're tracking.  Would need to mess around here for logic around tracking multiple bodies.
-        ofxOpenNIUser user = kinect.getTrackedUser(0);
+        ofxOpenNIUser user = kinect.getTrackedUser(m);
         
         ofSetColor(255);
         
@@ -211,11 +214,20 @@ void ofApp::draw(){
             position.set(hand.getPosition().x, hand.getPosition().y);
             mathVectors.push_back(position);
             
+//            cout << mathVectors[k] << endl;
 
-            if(frame % 120 == 0){
-                diff = mathVectors[k] + mathVectors[k - 1];
-                angle = mathVectors[k - 120].angle(mathVectors[k]);
-                cout << angle << endl;
+            if(frame % 60 == 0){
+                diff = mathVectors[k] - mathVectors[k - 59];
+                angle = mathVectors[k - 59].angle(mathVectors[k]);
+                distance = mathVectors[k - 59].distance(mathVectors[k]);
+//                cout << distance << endl;
+//                cout << angle << endl;
+
+                
+                if(angle > 90){
+                    pianoNotes.back().play();
+//                    cout << angle << endl;
+                }
 
             }
             
@@ -224,7 +236,7 @@ void ofApp::draw(){
               line.addVertex(handPosition.x, handPosition.y);
               ofDrawLine(handPosition.x, handPosition.y, 50, 50);
             
-            if (line.size() > 200){
+            if (line.size() > 100){
                 line.getVertices().erase(
                                          line.getVertices().begin()
                                          );
@@ -243,9 +255,41 @@ void ofApp::draw(){
                 // If the position of the hand in space matches the given value of xX
                 if(xX == floor(handPosition.x)) {
                     
-                    // Then set the speed of the sound based on the hand's y position. If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
-                    //                    speed = abs((handPosition.x - handPosition.y) / handPosition.x * 3.0);
-                    //                    pianoNotes[j].setSpeed(speed);
+                    // Then set the speed of the sound based on the hand's y position or based on the distance of the vectors from current from and 60 frames (1 second) ago.  Quick short movements results in extremely high pitched sounds, long slower movements results in slower, lower sounds.
+                    //If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
+                    //Refactor into case statement later if you don't get too distracted
+                    
+                    if(distance < 25){
+                        speed = 6;
+                    }
+                    
+                    if(distance > 25 && distance < 50){
+                        speed = 4;
+                    }
+                    
+                    if(distance > 50 && distance < 200){
+                        speed = abs((handPosition.x - handPosition.y) / handPosition.x * 3.0);
+                    }
+                    
+                    if(distance > 200 && distance < 350){
+                        speed = .5;
+                    }
+                    
+                    if(distance > 350){
+                        speed = .2;
+                    }
+                    
+                    cout << speed << endl;
+                    pianoNotes[j].setSpeed(speed);
+                    
+                    //Set the pan position of the sound (which speaker it's coming from) based on x.  (0, 0) is at the center of the sensor, so if you move signifiantly to the left or to the right, the sound shifts to be coming from either of those sides.
+                    if(handPosition.x < -300){
+                        pianoNotes[j].setPan(-1.0f);
+                    }
+                    
+                    if(handPosition.x > 300){
+                        pianoNotes[j].setPan(-1.0f);
+                    }
                     
                     // And now we set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
                     volume = ofLerp(volume, 1, 0.8); // jump quickly to 1
@@ -268,7 +312,7 @@ void ofApp::draw(){
                 }
                 
                 // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
-                if(j < (pianoNotes.size() - 1)) {
+                if(j < (pianoNotes.size() - 2)){
                     j += 1;
                 }else {
                     j = 0;
@@ -276,7 +320,7 @@ void ofApp::draw(){
             }
         }
         ofPopMatrix();
-        
+     }
     }
 }
 
@@ -339,10 +383,9 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 //--------------------------------------------------------------
 
 void ofApp::handEvent(ofxOpenNIGestureEvent & event){
-    //    kinect.stop();
     if(event.gestureName == "Wave"){
-        kinect.stop();
+//        kinect.stop();
+        kinect.close();
     }
     
-    cout << event.gestureName << endl;
 }

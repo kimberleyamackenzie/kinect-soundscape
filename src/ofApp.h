@@ -2,6 +2,8 @@
 
 #include "ofMain.h"
 #include "ofxOpenNI.h"
+#include "ofxKinect.h"
+
 
 class ofApp : public ofBaseApp{
     
@@ -37,9 +39,15 @@ public:
     ofVec2f diff;
     ofVec2f position;
     float angle;
+    float distance;
 
     
     ofxOpenNI kinect;
+    ofVec2f dogs;
+    
+    ofxKinect ofKinect;
+    
+    float bunnies;
     bool mode;
     
 };
