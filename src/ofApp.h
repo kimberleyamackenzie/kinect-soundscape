@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxOpenNI.h"
 #include "ofxKinect.h"
+#include "ofxOpenCv.h"
 
 
 class ofApp : public ofBaseApp{
@@ -11,6 +12,10 @@ public:
     void setup();
     void update();
     void draw();
+    
+    // for ofxKinect mesh drawing
+    void drawPointCloud();
+
     
     void keyPressed(int key);
     void keyReleased(int key);
@@ -43,12 +48,28 @@ public:
 
     
     ofxOpenNI kinect;
-    ofVec2f dogs;
-    
-    ofxKinect ofKinect;
-    
-    float bunnies;
+
     bool mode;
+    
+////     mesh drawing!
+//    ofxCvColorImage colorImg;
+//
+    ofxCvGrayscaleImage grayImage; // grayscale depth image
+//    ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
+//    ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
+//
+//    ofxCvContourFinder contourFinder;
+//
+//    bool bThreshWithOpenCV;
+//    bool bDrawPointCloud;
+//
+//    int nearThreshold;
+//    int farThreshold;
+//
+//    // int angle;
+//
+////     used for viewing the point cloud
+//    ofEasyCam easyCam;
     
 };
 
