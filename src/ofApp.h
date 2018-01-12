@@ -5,6 +5,8 @@
 #include "ofxKinect.h"
 #include "ofxOpenCv.h"
 
+#define _USE_LIVE_VIDEO
+
 
 class ofApp : public ofBaseApp{
     
@@ -51,25 +53,24 @@ public:
 
     bool mode;
     
-////     mesh drawing!
-//    ofxCvColorImage colorImg;
-//
+    // for drawing the point cloud life
+    
+    ofxCvColorImage colorImg;
+    
     ofxCvGrayscaleImage grayImage; // grayscale depth image
-//    ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
-//    ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
-//
-//    ofxCvContourFinder contourFinder;
-//
-//    bool bThreshWithOpenCV;
-//    bool bDrawPointCloud;
-//
-//    int nearThreshold;
-//    int farThreshold;
-//
-//    // int angle;
-//
-////     used for viewing the point cloud
-//    ofEasyCam easyCam;
+    ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
+    ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
+    
+    ofxCvContourFinder contourFinder;
+    
+    bool bThreshWithOpenCV;
+    bool bDrawPointCloud;
+    
+    int nearThreshold;
+    int farThreshold;
+    
+    // used for viewing the point cloud
+    ofEasyCam easyCam;
     
 };
 
