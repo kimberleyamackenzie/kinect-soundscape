@@ -7,6 +7,9 @@
 
 #define _USE_LIVE_VIDEO
 
+//class KinectWrapper : public ofxOpenNI, public ofxKinect {
+//    
+//};
 
 class ofApp : public ofBaseApp{
     
@@ -48,8 +51,8 @@ public:
     float angle;
     float distance;
 
-    
     ofxOpenNI kinect;
+//    KinectWrapper kinect;
 
     bool mode;
     
@@ -60,17 +63,27 @@ public:
     ofxCvGrayscaleImage grayImage; // grayscale depth image
     ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
     ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
+    ofxCvGrayscaleImage     grayDiff;
+    ofxCvGrayscaleImage     grayBg;
+
+
     
     ofxCvContourFinder contourFinder;
     
     bool bThreshWithOpenCV;
     bool bDrawPointCloud;
+    bool bLearnBackground;
+
     
     int nearThreshold;
     int farThreshold;
     
     // used for viewing the point cloud
     ofEasyCam easyCam;
+    
+    ofMesh mesh;
+
+    
     
 };
 

@@ -44,6 +44,9 @@ void ofApp::setup(){
     grayThreshNear.allocate(kinect.getWidth(), kinect.getHeight());
     grayThreshFar.allocate(kinect.getWidth(), kinect.getHeight());
     
+    grayBg.allocate(320,240);
+    grayDiff.allocate(kinect.getWidth(), kinect.getHeight());
+    
     nearThreshold = 230;
     farThreshold = 70;
     bThreshWithOpenCV = true;
@@ -52,6 +55,8 @@ void ofApp::setup(){
     
     // start from the front
     bDrawPointCloud = false;
+    
+    bLearnBackground = true;
 
 }
 
@@ -63,22 +68,22 @@ void ofApp::update(){
 
     //point cloud drawing
     if(kinect.isFrameNew()) {
-        
+
         // load grayscale depth image from the kinect source
         grayImage.setFromPixels(kinect.getDepthPixels());
-        
-        
+
+
         // another method to draw from point cloud that isn't directly working with the pixels
         // two thresholds - one for the far plane and one for the near plane
         // we then do a cvAnd to get the pixels which are a union of the two thresholds
-//        if(bThreshWithOpenCV) {
-//            grayThreshNear = grayImage;
-//            grayThreshFar = grayImage;
-//            grayThreshNear.threshold(nearThreshold, true);
-//            grayThreshFar.threshold(farThreshold);
-//            cvAnd(grayThreshNear.getCvImage(), grayThreshFar.getCvImage(), grayImage.getCvImage(), NULL);
-//        } else {
-        
+        if(bThreshWithOpenCV) {
+            grayThreshNear = grayImage;
+            grayThreshFar = grayImage;
+            grayThreshNear.threshold(nearThreshold, true);
+            grayThreshFar.threshold(farThreshold);
+            cvAnd(grayThreshNear.getCvImage(), grayThreshFar.getCvImage(), grayImage.getCvImage(), NULL);
+        } else {
+
             // or manipulate directly with the pixels
             ofPixels & pix = grayImage.getPixels();
             int numPixels = pix.size();
@@ -89,14 +94,16 @@ void ofApp::update(){
                     pix[i] = 0;
                 }
             }
-//        }
-        
+        }
+
         // update the cv images
         grayImage.flagImageChanged();
-        
+
         // find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
         // also, find holes is set to true so we will get interior contours as well....
-        contourFinder.findContours(grayImage, 10, (kinect.getWidth()*kinect.getHeight())/2, 20, false);
+        contourFinder.findContours(grayDiff, 20, 25000, 10, true);
+
+//        contourFinder.findContours(grayImage, 10, (kinect.getWidth()*kinect.getHeight())/2, 20, false);
     }
 
 }
@@ -106,12 +113,27 @@ void ofApp::draw(){
     
     ofSetColor(255,255,255);
     
-    // draw from the live kinect
-    kinect.drawDepth(10, 10, 400, 300);
-    kinect.draw(420, 10, 400, 300);
+//    if(bDrawPointCloud) {
+//        easyCam.begin();
+//        drawPointCloud();
+//        cout << "drawing point cloud" << endl;
+//        easyCam.end();
+//    } else {
+//        // draw from the live kinect
+//        kinect.drawDepth(10, 10, 400, 300);
+//        kinect.draw(420, 10, 400, 300);
+//
+//        grayImage.draw(10, 320, 400, 300);
+//        contourFinder.draw(10, 320, 400, 300);
+//    }
+//
     
-    grayImage.draw(10, 320, 400, 300);
-    contourFinder.draw(10, 320, 400, 300);
+    easyCam.begin();
+    cout << "easy cam began" << endl;
+    drawPointCloud();
+    cout << "drawing point cloud" << endl;
+    easyCam.end();
+
     
     ofPushMatrix();
 
@@ -121,6 +143,12 @@ void ofApp::draw(){
     // As long as there is a least one person being tracked...
     
     if(kinect.getNumTrackedUsers() > 0 ){
+        cout << kinect.isConnected() << endl;
+
+
+        
+//        cout << kinect.getHeight() << endl;
+        
      for(int m = 0; m < kinect.getNumTrackedUsers(); m ++){
 
         line.draw();
@@ -198,6 +226,9 @@ void ofApp::draw(){
                 float y = joint.getProjectivePosition().y;
                 pos.set(x, y);
                 ofDrawCircle(pos.x, pos.y, 10);
+            
+                
+
                 
                 //                for (int xX = 0; xX < 700; xX += 7){
                 //
@@ -446,17 +477,24 @@ void ofApp::handEvent(ofxOpenNIGestureEvent & event){
 //--------------------------------------------------------------
 
 void ofApp::drawPointCloud() {
-    
+
     int w = 640;
     int h = 480;
-    ofMesh mesh;
     mesh.setMode(OF_PRIMITIVE_POINTS);
     int step = 2;
-    for(int y = 0; y < h; y += step) {
-        for(int x = 0; x < w; x += step) {
-            if(kinect.getDistanceAt(x, y) > 0) {
-                mesh.addColor(kinect.getColorAt(x,y));
+
+    for (int y = 0; y < h; y += step) {
+//        int currentIndex = 0;
+        for (int x = 0; x < w; x += step) {
+            if (kinect.getDistanceAt(x, y) > 0) {
+                mesh.addColor(kinect.getColorAt(x, y));
                 mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
+                //                mesh.addIndex(currentIndex);
+                //                if(currentIndex>0 && x + step < w && kinect.getDistanceAt(x+step, y) > 0){
+                //only add the second index if the vertex is not the first, nor the last
+                //                    mesh.addIndex(currentIndex);
+                //                }
+                //                currentIndex++;
             }
         }
     }

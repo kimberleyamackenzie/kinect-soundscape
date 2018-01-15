@@ -47,6 +47,7 @@
 
 class ofxKinectContext;
 
+
 /// \class ofxKinect
 ///
 /// wrapper for a freenect kinect device
@@ -58,6 +59,8 @@ class ofxKinectContext;
 class ofxKinect : public ofxBase3DVideo, protected ofThread {
 
 public:
+//    friend class ofxOpenNI;
+    
 
 	ofxKinect();
 	virtual ~ofxKinect();
@@ -331,8 +334,11 @@ public:
 	/// get the serial number of the next available device,
 	/// returns an empty string "" if nothing found
 	static string nextAvailableSerial();
-
+    
 protected:
+    
+//    friend class ofApp;
+//    friend class ofxOpenNI;
 
 	int deviceId;	///< -1 when not connected
 	string serial;	///< unique serial number, "" when not connected
@@ -344,8 +350,8 @@ protected:
 
 	ofPixels videoPixels;
 	ofPixels depthPixels;
-	ofShortPixels depthPixelsRaw;
 	ofFloatPixels distancePixels;
+    ofShortPixels depthPixelsRaw;
 
 	ofPoint rawAccel;
 	ofPoint mksAccel;
@@ -366,9 +372,13 @@ protected:
 	bool bGotData;
 	int tryCount;
 
+
 private:
 
-	friend class ofxKinectContext;
+    friend class ofxKinectContext;
+//    friend class ofApp;
+//    friend class ofxOpenNI;
+
 
 	/// global statics shared between kinect instances
 	static ofxKinectContext kinectContext;
@@ -413,6 +423,8 @@ private:
 class ofxKinectContext {
 
 public:
+//    friend class ofxOpenNI;
+
 
 	ofxKinectContext();
 	~ofxKinectContext();
@@ -503,7 +515,9 @@ public:
     };
 	
 private:
-    
+//    friend class ofxOpenNI;
+
+
 	bool bInited;						///< has the context been initialized?
 	freenect_context* kinectContext;    ///< kinect context handle
 	std::vector<KinectPair> deviceList;	///< list of available devices, sorted by serial lexicographically

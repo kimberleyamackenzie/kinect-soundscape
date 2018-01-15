@@ -743,7 +743,6 @@ string ofxKinect::nextAvailableSerial() {
 }
 
 /* ***** PRIVATE ***** */
-
 //---------------------------------------------------------------------------
 void ofxKinect::updateDepthLookupTable() {
 	unsigned char nearColor = bNearWhite ? 255 : 0;
