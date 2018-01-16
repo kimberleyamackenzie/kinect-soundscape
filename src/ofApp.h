@@ -82,7 +82,11 @@ public:
     ofEasyCam easyCam;
     
     ofMesh mesh;
+    
+    int xPos;
 
+    vector<ofPoint> pointCollection;
+//    int n;
     
     
 };

@@ -57,7 +57,12 @@ void ofApp::setup(){
     bDrawPointCloud = false;
     
     bLearnBackground = true;
-
+    
+    xPos = 0;
+    
+    ofSetFrameRate(60);
+    
+//    n = 0;
 }
 
 //--------------------------------------------------------------
@@ -65,6 +70,11 @@ void ofApp::update(){
     
     kinect.update();
     frame += 1;
+    xPos += 5;
+    
+//    for (int n = 0; n < (pointCollection.size()); n ++){
+//
+//    }
 
     //point cloud drawing
     if(kinect.isFrameNew()) {
@@ -84,7 +94,7 @@ void ofApp::update(){
             cvAnd(grayThreshNear.getCvImage(), grayThreshFar.getCvImage(), grayImage.getCvImage(), NULL);
         } else {
 
-            // or manipulate directly with the pixels
+//             or manipulate directly with the pixels
             ofPixels & pix = grayImage.getPixels();
             int numPixels = pix.size();
             for(int i = 0; i < numPixels; i++) {
@@ -126,14 +136,8 @@ void ofApp::draw(){
 //        grayImage.draw(10, 320, 400, 300);
 //        contourFinder.draw(10, 320, 400, 300);
 //    }
-//
-    
-    easyCam.begin();
-    cout << "easy cam began" << endl;
-    drawPointCloud();
-    cout << "drawing point cloud" << endl;
-    easyCam.end();
 
+    
     
     ofPushMatrix();
 
@@ -309,7 +313,7 @@ void ofApp::draw(){
 
                 
                 if(angle > 90){
-                    pianoNotes.back().play();
+//                    pianoNotes.back().play();
 //                    cout << angle << endl;
                 }
 
@@ -380,6 +384,25 @@ void ofApp::draw(){
                     
                     // And we play it!
                     pianoNotes[j].play();
+                    pointCollection.push_back(pt);
+
+                    
+//                    for (int n = 0; n < (pointCollection.size()); n ++){
+//                    ofPolyline polyline;
+//                        pointCollection[n];
+//                        polyline.arc(pointCollection[n].x, pointCollection[n].y, 50, 50, 0, 360);
+//                        ofSetColor(ofColor::orangeRed);
+//                        polyline.draw();
+////                        polyline.close();
+////                    n += 1;
+//                    }
+                
+//                    xPos = handPosition.x;
+//                    path = path.circle(handPosition.x, handPosition.y, 50);
+//                    circleCollection.push_back(path);
+////                    path.close();
+//                    polyline.draw();
+                    ofTranslate(10, 10);
                     
                     // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
                     //                    if(pianoNotes[j].isPlaying()){
@@ -397,6 +420,8 @@ void ofApp::draw(){
                 
                 // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
                 if(j < (pianoNotes.size() - 2)){
+//                if(j < (82 - 2)){
+
                     j += 1;
                 }else {
                     j = 0;
@@ -404,13 +429,30 @@ void ofApp::draw(){
             }
         }
         ofPopMatrix();
+         
+         for (int n = 0; n < (pointCollection.size()); n ++){
+             ofPath path;
+             pointCollection[n];
+             path.circle(pointCollection[n].x, pointCollection[n].y, 50);
+             path.setColor(ofColor::orangeRed);
+//             path.setFilled(false);
+//             ofTranslate(50, 50);
+//             ofScale(.5, .5);
+             path.draw();
+             //                        polyline.close();
+             //                    n += 1;
+         }
      }
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-    
+    switch (key) {
+        case'p':
+            bDrawPointCloud = !bDrawPointCloud;
+            break;
+    }
 }
 
 //--------------------------------------------------------------
