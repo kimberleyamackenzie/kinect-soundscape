@@ -5,12 +5,6 @@
 #include "ofxKinect.h"
 #include "ofxOpenCv.h"
 
-#define _USE_LIVE_VIDEO
-
-//class KinectWrapper : public ofxOpenNI, public ofxKinect {
-//    
-//};
-
 class ofApp : public ofBaseApp{
     
 public:
@@ -20,8 +14,10 @@ public:
     
     // for ofxKinect mesh drawing
     void drawPointCloud();
+    // When a known gesture is recognized
+    void handEvent(ofxOpenNIGestureEvent & event);
 
-    
+    // Preset functions in OF app
     void keyPressed(int key);
     void keyReleased(int key);
     void mouseMoved(int x, int y );
@@ -33,51 +29,49 @@ public:
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
-    void handEvent(ofxOpenNIGestureEvent & event);
 
-    
-    ofSoundPlayer   tuning;
-    vector<ofSoundPlayer>   pianoNotes;
+    // Setting up for soundmaking
+    ofSoundPlayer tuning;
+    vector<ofSoundPlayer> pianoNotes;
     string note;
     
-    ofPolyline line;
-    
-    vector<ofVec2f> mathVectors;
-
+    // Counters
     int k;
     int frame;
+    
+    // Relating to sound cuing logic
+    vector<ofVec2f> mathVectors;
+    
     ofVec2f diff;
     ofVec2f position;
+    
     float angle;
     float distance;
 
+    // the Kinect seems like an important thing to have
     ofxOpenNI kinect;
-//    KinectWrapper kinect;
 
+    // Boolean for keeping track of skeletal tracking
     bool mode;
     
-    // for drawing the point cloud life
-    
+    // for drawing the mesh based on Kinect depth data
     ofxCvColorImage colorImg;
-    
-    ofxCvGrayscaleImage grayImage; // grayscale depth image
-    ofxCvGrayscaleImage grayThreshNear; // the near thresholded image
-    ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
-    ofxCvGrayscaleImage     grayDiff;
-    ofxCvGrayscaleImage     grayBg;
-    
-    ofxCvGrayscaleImage     grayCanny;
-    ofxCvGrayscaleImage        debugImage;
-    ofxCvGrayscaleImage        depthImg;
-    ofxCvColorImage            depthImg2;
-    ofxCvGrayscaleImage        cvimg;
-    ofxCvGrayscaleImage        edges;
-    ofxCvGrayscaleImage        depthOverlay;
-//
+    ofxCvGrayscaleImage grayImage;
+    ofxCvGrayscaleImage grayThreshNear;
+    ofxCvGrayscaleImage grayThreshFar;
+    ofxCvGrayscaleImage grayDiff;
+    ofxCvGrayscaleImage grayBg;
+    ofxCvGrayscaleImage grayCanny;
+    ofxCvGrayscaleImage debugImage;
+    ofxCvGrayscaleImage depthImg;
+    ofxCvColorImage depthImg2;
+    ofxCvGrayscaleImage cvimg;
+    ofxCvGrayscaleImage edges;
+    ofxCvGrayscaleImage depthOverlay;
+
     vector <ofPoint> contourReg;
     vector <ofPoint> contourSmooth;
 
-    
     ofxCvContourFinder contourFinder;
     
     bool bThreshWithOpenCV;
@@ -88,29 +82,29 @@ public:
     int nearThreshold;
     int farThreshold;
     
-    // used for viewing the point cloud
+    // used for viewing and manipulating meshes
     ofEasyCam easyCam;
-        
-    int xPos;
-
+    
+    // Collection of hand positions used in sound cuing, mesh-making, and visualization generating
     vector<ofPoint> pointCollection;
+    
+    // Relating to non-mesh visualizations
     vector<float> radii;
     vector<integer_t> xPositions;
     vector<integer_t> yPositions;
 
     float radius = 0.1;
+    ofPolyline line;
+    int xPos;
 
-//    int n;
-    
-    ofLight light;
-
+    // Relating to visualizations, mesh and otherwise
     vector<ofColor>   colors;
     
+    // For the meshes
     ofMesh backgroundMesh;
     ofMesh userMesh;
     ofImage image;
+    vector<ofVec3f> offsets;
 
-    
-    
 };
 

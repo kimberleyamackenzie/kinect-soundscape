@@ -3,28 +3,29 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     
-//    ofBackground(0);
-    
+    // Managing the kinect and its many many needs
     kinect.setup();
     kinect.setRegister(true);
     kinect.setRegistration(true);
-
     kinect.setMirror(true);
     kinect.addDepthGenerator();
     kinect.addUserGenerator();
     
-    kinect.addHandsGenerator();
-    kinect.addAllHandFocusGestures();
-    kinect.addGestureGenerator();
-    
-    ofAddListener(kinect.gestureEvent,this,&ofApp::handEvent);
-    
-    kinect.setMaxNumHands(2);
-    
+    // Managing the kinect with ofxKinect commands in addition to above ofxOpenNI commands
     kinect.ofxKinect::init();
     kinect.ofxKinect::open();
     kinect.start();
     mode = false;
+    
+    // Allowing the Kinect to register hands (in addition to joints) and recognize a small, small, small set of basic gestures
+    kinect.addHandsGenerator();
+    kinect.addAllHandFocusGestures();
+    kinect.addGestureGenerator();
+    kinect.setMaxNumHands(6);
+
+    // Custom event listener for gestures
+    ofAddListener(kinect.gestureEvent,this,&ofApp::handEvent);
+    
     
     // Iterate through all the wav files to load them; allow them to play simultaneously to themselves, and push them into our collection for easy retrival later
     for(int i = 1; i<80; i++){
@@ -37,12 +38,13 @@ void ofApp::setup(){
     }
     
     
+    // Fun with variables!
     k = 0;
-    
+
     // frame counter
     frame = 0;
-    
-    // draw the mesh cloud
+
+    // Set up for drawing a mesh based on Kinect depth data
     colorImg.allocate(kinect.getWidth(), kinect.getHeight());
     grayImage.allocate(kinect.getWidth(), kinect.getHeight());
     grayThreshNear.allocate(kinect.getWidth(), kinect.getHeight());
@@ -53,38 +55,32 @@ void ofApp::setup(){
     depthOverlay.allocate(kinect.getWidth(), kinect.getHeight());
     depthImg.allocate(kinect.getWidth(), kinect.getHeight());
     depthImg2.allocate(kinect.getWidth(), kinect.getHeight());
-    
     grayBg.allocate(320,240);
     grayDiff.allocate(kinect.getWidth(), kinect.getHeight());
     
     thresholdValue = 40;
     nearThreshold = 230;
     farThreshold  = 70;
+    
     bThreshWithOpenCV = true;
-    
-    ofSetFrameRate(60);
-    
-    // start from the front
     bDrawPointCloud = true;
-    
     bLearnBackground = true;
     
-    xPos = 0;
     
-//    light.enable();
-//
-//    light.setSpotlight(10, 10);
+    // Set frame rate to ensure visualizations operate on same frame rate as Kinect is updating
+    ofSetFrameRate(60);
     
-//    n = 0;
-    
+    // Setup for a mesh that would become a background (not user generated)
+    // Load the image to be meshed
     image.load("test.png");
     image.resize(200, 200);
-
-
+    // Set up mesh basics
     backgroundMesh.setMode(OF_PRIMITIVE_LINES);
     backgroundMesh.enableColors();
     backgroundMesh.enableIndices();
-    float intensityThreshold = 150.0;
+    
+    // Add all vertices based on lightness of pixels
+    float intensityThreshold = 125.0;
     int w = image.getWidth();
     int h = image.getHeight();
     for (int x = 0; x < w; ++x){
@@ -94,13 +90,14 @@ void ofApp::setup(){
             if(intensity >= intensityThreshold) {
                 float saturation = c.getSaturation();
                 float z = ofMap(saturation, 0, 255, -100, 100);
+                cout << "z is " << z << endl;
                 ofVec3f pos(x * 4, y * 4, z);
                 backgroundMesh.addVertex(pos);
                 backgroundMesh.addColor(c);
             }
         }
     }
-    
+    // Add indices and connect the vertices
     float connectionDistance = 30;
     int numVerts = backgroundMesh.getNumVertices();
     for (int a=0; a<numVerts; ++a) {
@@ -115,49 +112,43 @@ void ofApp::setup(){
         }
     }
     
-    
+    // Set up the basics for the user generated mesh
     userMesh.setMode(OF_PRIMITIVE_LINES);
     userMesh.enableColors();
     userMesh.enableIndices();
-    
 
-
-    
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     
-
+    // During update, the kinect should probably update.  Maybe.
     kinect.update();
+    
+    // Easy frame counter
     frame += 1;
-    xPos += 5;
     
-//    radius += 0.1;
-    
-    // No need to draw circles when the radius is bigger than
-    // the window diagonal
-//    if( radius * radius > ofGetWidth() * ofGetWidth() + ofGetHeight() * ofGetHeight() )
-//    {
-//        radius -= 200.f;
-//    }
+    // Update for offsets to create small movements on user generated mesh
+    int numVerts = userMesh.getNumVertices();
+    for (int i=0; i<numVerts; ++i) {
+        ofVec3f vert = userMesh.getVertex(i);
+        
+        float time = ofGetElapsedTimef();
+        float timeScale = 5.0;
+        float displacementScale = 0.75;
+        
+        ofVec3f timeOffsets = offsets[i];
+        
+        vert.x += (ofSignedNoise(time*timeScale+timeOffsets.x)) * displacementScale;
+        vert.y += (ofSignedNoise(time*timeScale+timeOffsets.y)) * displacementScale;
+        vert.z += (ofSignedNoise(time*timeScale+timeOffsets.z)) * displacementScale;
+        userMesh.setVertex(i, vert);
+    }
 
-    
-//    for (int n = 0; n < (pointCollection.size()); n ++){
-//
-//    }
-
-    
-    //point cloud drawing
+    // Creating a mesh/contours/point cloud from the user based on Kinect data
     if(kinect.isFrameNew()) {
-
-        // load grayscale depth image from the kinect source
         grayImage.setFromPixels(kinect.getDepthPixels());
 
-
-        // another method to draw from point cloud that isn't directly working with the pixels
-        // two thresholds - one for the far plane and one for the near plane
-        // we then do a cvAnd to get the pixels which are a union of the two thresholds
         if(bThreshWithOpenCV) {
             grayThreshNear = grayImage;
             grayThreshFar = grayImage;
@@ -165,8 +156,6 @@ void ofApp::update(){
             grayThreshFar.threshold(farThreshold);
             cvAnd(grayThreshNear.getCvImage(), grayThreshFar.getCvImage(), grayImage.getCvImage(), NULL);
         } else {
-
-//             or manipulate directly with the pixels
             ofPixels & pix = grayImage.getPixels();
             int numPixels = pix.size();
             for(int i = 0; i < numPixels; i++) {
@@ -177,102 +166,57 @@ void ofApp::update(){
                 }
             }
         }
-
-        // update the cv images
         grayImage.flagImageChanged();
-
-        // find contours which are between the size of 20 pixels and 1/3 the w*h pixels.
-        // also, find holes is set to true so we will get interior contours as well....
+        // find contours and interior contours
         contourFinder.findContours(grayDiff, 20, 25000, 10, true);
-
         contourFinder.findContours(grayImage, 10, (kinect.getWidth()*kinect.getHeight())/2, 20, false);
     }
-
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
     
-//    ofSetColor(255,255,255);
-    
+        // Trigger drawing point cloud (creating mesh from Kinect depth data)
+        // easyCam.begin();
+        // drawPointCloud();
+        // easyCam.end();
 
     
-//    if(bDrawPointCloud) {
-//        easyCam.begin();
-//        drawPointCloud();
-//        easyCam.end();
-//    }
-//    } else {
-//
-//
-////         draw from the live kinect
-//        kinect.drawDepth(10, 10, ofGetWidth(), ofGetHeight());
-//        kinect.draw(420, 10, 400, 300);
-//
-//        grayImage.draw(10, 320, 400, 300);
-//        contourFinder.draw(10, 320, 400, 300);
-//
-//
-//    }
+        // Or draw depth (quick fix to generating blobs)
+        // kinect.drawDepth(10, 10, ofGetWidth(), ofGetHeight());
+        // kinect.draw(420, 10, 400, 300);
+        // grayImage.draw(10, 320, 400, 300);
+        // contourFinder.draw(10, 320, 400, 300);
 
-//    image.draw(0, 0);
+    // Create gradient for background
     ofColor centerColor = ofColor(85, 78, 68);
     ofColor edgeColor(0, 0, 0);
     ofBackgroundGradient(centerColor, edgeColor, OF_GRADIENT_CIRCULAR);
     
-    easyCam.begin();
-    ofPushMatrix();
-    ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
-    backgroundMesh.draw();
-    ofPopMatrix();
-    easyCam.end();
+    // Start easy cam for manipulating static mesh (backgroundMesh) above
+    // easyCam.begin();
+    // ofPushMatrix();
+    // ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
+    // backgroundMesh.draw();
+    // ofPopMatrix();
+    // easyCam.end();
 
-    // Could use below syntax to redefine the field of view
-    //    ofTranslate(200, 50, - 100);
+    // Could use below syntax to redefine the field of view depending on physical set-up of space
+    // ofTranslate(200, 50, - 100);
     
     // As long as there is a least one person being tracked...
-    
     if(kinect.getNumTrackedUsers() > 0 ){
-        cout << kinect.isConnected() << endl;
-
-
-        
-//        cout << kinect.getHeight() << endl;
-        
      for(int m = 0; m < kinect.getNumTrackedUsers(); m ++){
-
-        line.draw();
+         
+         // Where to start drawing the skeleton if we're doing that
+         // line.draw();
         
         // Make that user the person who's skeleton we're tracking.  Would need to mess around here for logic around tracking multiple bodies.
         ofxOpenNIUser user = kinect.getTrackedUser(m);
-        
-        ofSetColor(255);
-        
-//        
-//                ofxOpenNIHand & trackedHand = kinect.getTrackedHand(0);
-//                ofPoint &  trackedHandPosition = trackedHand.getPosition();
-//        
-//                ofxOpenNIJoint trackedJoint = user.getJoint(JOINT_RIGHT_ELBOW);
-//        
-//        cout << "tracked hand y is " << trackedHandPosition.y << "tracked elbow y is " << trackedJoint.getProjectivePosition().y << endl;
-//        cout << trackedJoint.getProjectivePosition().y << endl;
-//        cout << gestureStatusOne << endl;
-//
-//        
-//                if((trackedHandPosition.y > trackedJoint.getProjectivePosition().y &&  trackedHandPosition.x > trackedJoint.getProjectivePosition().x) || gestureStatusOne == true){
-//                    gestureStatusOne == true;
-//                    if(trackedHandPosition.y > trackedJoint.getProjectivePosition().y &&  trackedHandPosition.x < trackedJoint.getProjectivePosition().x){
-//                        gestureStatusTwo == true;
-//                    }
-//                }
-//        
-//                if(gestureStatusOne && gestureStatusTwo){
-//                    cout << "waving gesture recognized booyah" << endl;
-//                    gestureStatusOne = false;
-//                    gestureStatusTwo = false;
-//                }
-//        
-//        
+
+        // Syntax for getting a specific joint (rather than interating through all)
+        ofxOpenNIJoint trackedJoint = user.getJoint(JOINT_RIGHT_ELBOW);
+
         // For the total count of limbs that the Kinect identifies on the user
         for(int i = 0; i < user.getNumLimbs(); i ++){
             // Go through the ofxOpenNI collection of limbs
@@ -287,11 +231,12 @@ void ofApp::draw(){
                 float x2 = limb.getEndJoint().getProjectivePosition().x;
                 float y2 = limb.getEndJoint().getProjectivePosition().y;
                 
-                // And draw a line so that the limb can be seen
-                ofDrawLine(x1, y1, x2, y2);
+                // And draw a line so that the limb can be seen - if you're drawing the skeleton
+                // ofDrawLine(x1, y1, x2, y2);
             }
         }
         
+        // Create the vector where the joint's x/y location will be stored
         ofVec2f pos;
         
         // For the total count of joints that the Kinect identifies on the user
@@ -307,15 +252,13 @@ void ofApp::draw(){
             // And if that joint is seen on the user
             if(joint.isFound()){
                 
-                // The monitor we have for seeing if skeletal tracking is working is set to true (trigger that green circle in th upper left of the screen)
-                mode = true;
-                ofSetColor(0, 255, 0, 100);
-                
                 // And then we find the position of that joint, set it to the (image)vector we declared above, to draw a circle of radius 10 at that point
                 float x = joint.getProjectivePosition().x;
                 float y = joint.getProjectivePosition().y;
                 pos.set(x, y);
-                ofDrawCircle(pos.x, pos.y, 10);
+                
+                // Draw a circle at each joint, if you're drawing the skeleton
+                // ofDrawCircle(pos.x, pos.y, 10);
             
                 
 
@@ -380,16 +323,15 @@ void ofApp::draw(){
             ofPoint & handPosition = hand.getPosition();
             
             // Watch the gestures of that hand as a continuous line being drawn on the screen if that's your thing
-            //          ofPoint pt;
-            //          pt.set(handPosition.x, handPosition.y);
-            //          line.addVertex(handPosition.x, handPosition.y);
-            //          ofDrawLine(handPosition.x, handPosition.y, 50, 50);
+            // ofPoint pt;
+            // pt.set(handPosition.x, handPosition.y);
+            // line.addVertex(handPosition.x, handPosition.y);
+            // ofDrawLine(handPosition.x, handPosition.y, 50, 50);
             
             position.set(hand.getPosition().x, hand.getPosition().y);
             mathVectors.push_back(position);
             
-//            cout << mathVectors[k] << endl;
-
+            
             if(frame % 60 == 0){
                 diff = mathVectors[k] - mathVectors[k - 59];
                 angle = mathVectors[k - 59].angle(mathVectors[k]);
@@ -407,14 +349,14 @@ void ofApp::draw(){
             
               ofPoint pt;
               pt.set(handPosition.x, handPosition.y);
-//              line.addVertex(handPosition.x, handPosition.y);
-//              ofDrawLine(handPosition.x, handPosition.y, 50, 50);
             
-            if (line.size() > 100){
-                line.getVertices().erase(
-                                         line.getVertices().begin()
-                                         );
-            }
+            // More logic around drawing with hand position and ensuring that the line never gets to long (deletes from end)
+            // line.addVertex(handPosition.x, handPosition.y);
+            // ofDrawLine(handPosition.x, handPosition.y, 50, 50);
+            
+            // if (line.size() > 100){
+                // line.getVertices().erase(line.getVertices().begin());
+            // }
             
 
             
@@ -436,31 +378,24 @@ void ofApp::draw(){
                     if(distance < 25){
                         speed = 6;
                     }
-                    
                     if(distance > 25 && distance < 50){
                         speed = 4;
                     }
-                    
                     if(distance > 50 && distance < 200){
                         speed = abs((handPosition.x - handPosition.y) / handPosition.x * 3.0);
                     }
-                    
                     if(distance > 200 && distance < 350){
                         speed = .5;
                     }
-                    
                     if(distance > 350){
                         speed = .2;
                     }
-                    
-                    cout << speed << endl;
                     pianoNotes[j].setSpeed(speed);
                     
                     //Set the pan position of the sound (which speaker it's coming from) based on x.  (0, 0) is at the center of the sensor, so if you move signifiantly to the left or to the right, the sound shifts to be coming from either of those sides.
                     if(handPosition.x < -300){
                         pianoNotes[j].setPan(-1.0f);
                     }
-                    
                     if(handPosition.x > 300){
                         pianoNotes[j].setPan(-1.0f);
                     }
@@ -473,22 +408,6 @@ void ofApp::draw(){
                     pointCollection.push_back(pt);
 
                     
-//                    for (int n = 0; n < (pointCollection.size()); n ++){
-//                    ofPolyline polyline;
-//                        pointCollection[n];
-//                        polyline.arc(pointCollection[n].x, pointCollection[n].y, 50, 50, 0, 360);
-//                        ofSetColor(ofColor::orangeRed);
-//                        polyline.draw();
-////                        polyline.close();
-////                    n += 1;
-//                    }
-                
-//                    xPos = handPosition.x;
-//                    path = path.circle(handPosition.x, handPosition.y, 50);
-//                    circleCollection.push_back(path);
-////                    path.close();
-//                    polyline.draw();
-//                    ofTranslate(10, 10);
                     
                     // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
                     //                    if(pianoNotes[j].isPlaying()){
@@ -506,8 +425,6 @@ void ofApp::draw(){
                 
                 // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
                 if(j < (pianoNotes.size() - 2)){
-//                if(j < (82 - 2)){
-
                     j += 1;
                 }else {
                     j = 0;
@@ -515,32 +432,61 @@ void ofApp::draw(){
             }
         }
          
-//             for (int n = 0; n < (pointCollection.size()); n ++){
-//             ofPolyline polyline;
-//                 colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-//                 radii.push_back(ofRandom(0, 1));
-//         ofRotateZ(45);
-
-//                 if(n == (pointCollection.size() - 1)){
-//                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
-//                 } else {
-//                     radii[n] += 0.1;
-//
-//                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
-//                 }
-//                 ofSetColor(colors[n]);
-//                 polyline.draw();
-//
-//             }
+         // // Visualizations that trigger the creation of circles that start at a randomized size and get gradually larger relative to their starting size as the frames increase
+         // // N number of times, as long as we don't equal or surpass how many points of hand positions we have
+         // for (int n = 0; n < (pointCollection.size()); n ++){
+            // // Create a polyline
+            // ofPolyline polyline;
+            // // Get a random color, and push it into a vector of colors so the circle will remain the same color throughout the program
+            // colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+            // // Same as above but with the radius of the circle
+            // radii.push_back(ofRandom(0, 1));
+            // // Rotating the depth around the center of the OF grad created a neat effect
+            // ofRotateZ(45);
+            // If we are creating a circle for the first time, give it that random radius, and draw the polyline going from 0 to 360 to make a circle.  Otherwise, save the radius as .1 larger than the last frame and set the color to the correlating n color, and draw it.
+                 // if(n == (pointCollection.size() - 1)){
+                    // polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+                 // } else {
+                     // radii[n] += 0.1;
+                    // polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+                 // }
+                 // ofSetColor(colors[n]);
+                 // polyline.draw();
+         // }
          
+         // // Similiar logic as above, but with lines that come from a set position on the top of the screen and go down to the users hand position
+            // for (int n = 0; n < (pointCollection.size()); n ++){
+                 // ofPolyline polyline;
+                 // colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+                 // xPositions.push_back(ofRandom(0, pointCollection[n].x));
+                 // yPositions.push_back(ofRandom(0, pointCollection[n].y));
+                 // ofSetColor(colors[n]);
+                 // if(n == (pointCollection.size() - 1)){
+                      // ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
+                  // } else {
+                       // yPositions[n] += 2;
+                       // if(yPositions[n] < pointCollection[n].y){
+                       // ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
+                      // }
+                  // }
+             // }
          
-         
+         // Creating the user generated mesh from hand positions during each frame
+         // As long as there are previous hand positions to reference
          if(pointCollection.size() > 0){
-         ofVec3f nextVertex(pointCollection.back().x, pointCollection.back().y);
-         userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-         userMesh.addVertex(nextVertex);
+             // Play with adding depth to user generated mesh
+             float z = ofRandom(-50, 50);
+             // Create a vector based on the last position the hand was in and (potentially) the randomized depth
+             ofVec3f nextVertex(pointCollection.back().x, pointCollection.back().y, z);
+             // Make this piece of the mesh a randomized color
+             userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+             // Add this vertex to the user generated mesh
+             userMesh.addVertex(nextVertex);
+             // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
+             offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
          }
          
+         // Now, connect those vertices through referencing and creating indicies, based on the connection distance between vertices
          float connectionDistance = 80;
          int numVerts = userMesh.getNumVertices();
          for (int a=0; a<numVerts; ++a) {
@@ -556,45 +502,16 @@ void ofApp::draw(){
                  }
              }
          }
-         
          userMesh.draw();
          
-//         for (int n = 0; n < (pointCollection.size()); n ++){
-//             ofPolyline polyline;
-//             colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-//             xPositions.push_back(ofRandom(0, pointCollection[n].x));
-//             yPositions.push_back(ofRandom(0, pointCollection[n].y));
-//             ofSetColor(colors[n]);
-//             if(n == (pointCollection.size() - 1)){
-//                 ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
-//
-//              } else {
-//                  yPositions[n] += 2;
-//                  if(yPositions[n] < pointCollection[n].y){
-//                  ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
-//                  }
-//
-//              }
-//         }
          ofPopMatrix();
-
-
-     }
+        }
     }
-    
-
-
-    
-
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-    switch (key) {
-        case'p':
-            bDrawPointCloud = !bDrawPointCloud;
-            break;
-    }
+
 }
 
 //--------------------------------------------------------------
@@ -659,7 +576,6 @@ void ofApp::handEvent(ofxOpenNIGestureEvent & event){
 }
 
 //--------------------------------------------------------------
-
 void ofApp::drawPointCloud() {
 
     int w = 640;
@@ -671,34 +587,20 @@ void ofApp::drawPointCloud() {
 
     for (int y = 0; y < h; y += step) {
         cout << "drawing point cloud" << endl;
-
         int currentIndex = 0;
         for (int x = 0; x < w; x += step) {
-//            cout << "distance is " << kinect.ofxKinect::getDistanceAt(x, y) << endl;
-
             if (kinect.ofxKinect::getDistanceAt(x, y) > 0) {
-//                cout << "inside distance " << endl;
-
                 mesh.addColor(kinect.ofxKinect::getColorAt(x, y));
-//                cout << "inside color" << endl;
                 mesh.addVertex(kinect.ofxKinect::getWorldCoordinateAt(x, y));
-//                                mesh.addIndex(currentIndex);
-//                                if(currentIndex>0 && x + step < w && kinect.getDistanceAt(x+step, y) > 0){
-////                only add the second index if the vertex is not the first, nor the last
-//                                    mesh.addIndex(currentIndex);
-//                                }
-//                                currentIndex++;
             }
         }
     }
     glPointSize(3);
-//    ofPushMatrix();
-    // the projected points are 'upside down' and 'backwards'
+    ofPushMatrix();
     ofScale(1, -1, -1);
-    ofTranslate(0, 0, -1000); // center the points a bit
+    ofTranslate(0, 0, -1000);
     ofEnableDepthTest();
     mesh.drawVertices();
     ofDisableDepthTest();
-//    ofPopMatrix();
-
+    ofPopMatrix();
 }
