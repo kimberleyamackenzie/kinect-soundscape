@@ -65,7 +65,17 @@ public:
     ofxCvGrayscaleImage grayThreshFar; // the far thresholded image
     ofxCvGrayscaleImage     grayDiff;
     ofxCvGrayscaleImage     grayBg;
-
+    
+    ofxCvGrayscaleImage     grayCanny;
+    ofxCvGrayscaleImage        debugImage;
+    ofxCvGrayscaleImage        depthImg;
+    ofxCvColorImage            depthImg2;
+    ofxCvGrayscaleImage        cvimg;
+    ofxCvGrayscaleImage        edges;
+    ofxCvGrayscaleImage        depthOverlay;
+//
+    vector <ofPoint> contourReg;
+    vector <ofPoint> contourSmooth;
 
     
     ofxCvContourFinder contourFinder;
@@ -74,19 +84,26 @@ public:
     bool bDrawPointCloud;
     bool bLearnBackground;
 
-    
+    int thresholdValue;
     int nearThreshold;
     int farThreshold;
     
     // used for viewing the point cloud
     ofEasyCam easyCam;
-    
-    ofMesh mesh;
-    
+        
     int xPos;
 
     vector<ofPoint> pointCollection;
+    vector<float> radii;
+
+    float radius = 0.1;
+
 //    int n;
+    
+    ofLight light;
+
+    vector<ofColor>   colors;
+
     
     
 };

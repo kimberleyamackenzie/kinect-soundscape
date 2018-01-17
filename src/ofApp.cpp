@@ -3,10 +3,12 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
     
-    ofBackground(0);
+//    ofBackground(0);
     
     kinect.setup();
     kinect.setRegister(true);
+    kinect.setRegistration(true);
+
     kinect.setMirror(true);
     kinect.addDepthGenerator();
     kinect.addUserGenerator();
@@ -19,6 +21,8 @@ void ofApp::setup(){
     
     kinect.setMaxNumHands(2);
     
+    kinect.ofxKinect::init();
+    kinect.ofxKinect::open();
     kinect.start();
     mode = false;
     
@@ -43,24 +47,33 @@ void ofApp::setup(){
     grayImage.allocate(kinect.getWidth(), kinect.getHeight());
     grayThreshNear.allocate(kinect.getWidth(), kinect.getHeight());
     grayThreshFar.allocate(kinect.getWidth(), kinect.getHeight());
+    cvimg.allocate(kinect.getWidth(), kinect.getHeight());
+    edges.allocate(kinect.getWidth(), kinect.getHeight());
+    debugImage.allocate(kinect.getWidth(), kinect.getHeight());
+    depthOverlay.allocate(kinect.getWidth(), kinect.getHeight());
+    depthImg.allocate(kinect.getWidth(), kinect.getHeight());
+    depthImg2.allocate(kinect.getWidth(), kinect.getHeight());
     
     grayBg.allocate(320,240);
     grayDiff.allocate(kinect.getWidth(), kinect.getHeight());
     
+    thresholdValue = 40;
     nearThreshold = 230;
-    farThreshold = 70;
+    farThreshold  = 70;
     bThreshWithOpenCV = true;
     
     ofSetFrameRate(60);
     
     // start from the front
-    bDrawPointCloud = false;
+    bDrawPointCloud = true;
     
     bLearnBackground = true;
     
     xPos = 0;
     
-    ofSetFrameRate(60);
+//    light.enable();
+//
+//    light.setSpotlight(10, 10);
     
 //    n = 0;
 }
@@ -68,14 +81,26 @@ void ofApp::setup(){
 //--------------------------------------------------------------
 void ofApp::update(){
     
+
     kinect.update();
     frame += 1;
     xPos += 5;
+    
+//    radius += 0.1;
+    
+    // No need to draw circles when the radius is bigger than
+    // the window diagonal
+//    if( radius * radius > ofGetWidth() * ofGetWidth() + ofGetHeight() * ofGetHeight() )
+//    {
+//        radius -= 200.f;
+//    }
+
     
 //    for (int n = 0; n < (pointCollection.size()); n ++){
 //
 //    }
 
+    
     //point cloud drawing
     if(kinect.isFrameNew()) {
 
@@ -113,7 +138,7 @@ void ofApp::update(){
         // also, find holes is set to true so we will get interior contours as well....
         contourFinder.findContours(grayDiff, 20, 25000, 10, true);
 
-//        contourFinder.findContours(grayImage, 10, (kinect.getWidth()*kinect.getHeight())/2, 20, false);
+        contourFinder.findContours(grayImage, 10, (kinect.getWidth()*kinect.getHeight())/2, 20, false);
     }
 
 }
@@ -121,25 +146,32 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
     
-    ofSetColor(255,255,255);
+//    ofSetColor(255,255,255);
     
-//    if(bDrawPointCloud) {
-//        easyCam.begin();
-//        drawPointCloud();
-//        cout << "drawing point cloud" << endl;
-//        easyCam.end();
+    cout << "serial is" << kinect.getSerial() << endl;
+
+    
+    if(bDrawPointCloud) {
+        easyCam.begin();
+        drawPointCloud();
+        easyCam.end();
+    }
 //    } else {
-//        // draw from the live kinect
-//        kinect.drawDepth(10, 10, 400, 300);
+//
+//
+////         draw from the live kinect
+//        kinect.drawDepth(10, 10, ofGetWidth(), ofGetHeight());
 //        kinect.draw(420, 10, 400, 300);
 //
 //        grayImage.draw(10, 320, 400, 300);
 //        contourFinder.draw(10, 320, 400, 300);
+//
+//
 //    }
 
-    
-    
+
     ofPushMatrix();
+
 
     // Could use below syntax to redefine the field of view
     //    ofTranslate(200, 50, - 100);
@@ -321,8 +353,8 @@ void ofApp::draw(){
             
               ofPoint pt;
               pt.set(handPosition.x, handPosition.y);
-              line.addVertex(handPosition.x, handPosition.y);
-              ofDrawLine(handPosition.x, handPosition.y, 50, 50);
+//              line.addVertex(handPosition.x, handPosition.y);
+//              ofDrawLine(handPosition.x, handPosition.y, 50, 50);
             
             if (line.size() > 100){
                 line.getVertices().erase(
@@ -402,7 +434,7 @@ void ofApp::draw(){
 //                    circleCollection.push_back(path);
 ////                    path.close();
 //                    polyline.draw();
-                    ofTranslate(10, 10);
+//                    ofTranslate(10, 10);
                     
                     // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
                     //                    if(pianoNotes[j].isPlaying()){
@@ -428,22 +460,57 @@ void ofApp::draw(){
                 }
             }
         }
-        ofPopMatrix();
          
-         for (int n = 0; n < (pointCollection.size()); n ++){
-             ofPath path;
-             pointCollection[n];
-             path.circle(pointCollection[n].x, pointCollection[n].y, 50);
-             path.setColor(ofColor::orangeRed);
-//             path.setFilled(false);
-//             ofTranslate(50, 50);
-//             ofScale(.5, .5);
-             path.draw();
-             //                        polyline.close();
-             //                    n += 1;
-         }
+//         ofPushStyle();
+//         for (int n = 0; n < (pointCollection.size()); n ++){
+//             ofPath path;
+//             //        ofSetLineWidth(5.f);
+//             path.setColor(ofColor::orangeRed);
+//             //        ofSetColor(ofColor::orangeRed);
+//
+//             float r = radius;
+//             //        while(r > 0.f && pointCollection.size() > 0){
+//             //
+//             //            ofDrawCircle((pointCollection.back().x + 300), (pointCollection.back().y - 50), 50);
+//             //            r -= 200.f;
+//             //        }
+//             //        path.circle(pointCollection[n].x, pointCollection[n].y, r);
+//             ofDrawSphere(pointCollection[n].x, pointCollection[n].y, r);
+//
+//             //             ofTranslate(50, 50);
+//             //             ofScale(.5, .5);
+//             //        path.scale(1.1, 1.1);
+//             path.draw();
+//             //                        polyline.close();
+//             //                    n += 1;
+//         }
+         
+             for (int n = 0; n < (pointCollection.size()); n ++){
+             ofPolyline polyline;
+                 colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+                 radii.push_back(ofRandom(0, 1));
+                 if(n == (pointCollection.size() - 1)){
+                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+                 } else {
+                     radii[n] += 0.1;
+
+                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+                 }
+                 ofSetColor(colors[n]);
+                 polyline.draw();
+
+             }
+//         ofPopStyle();
+         ofPopMatrix();
+
+
      }
     }
+    
+
+
+    
+
 }
 
 //--------------------------------------------------------------
@@ -522,32 +589,41 @@ void ofApp::drawPointCloud() {
 
     int w = 640;
     int h = 480;
+    ofMesh mesh;
+
     mesh.setMode(OF_PRIMITIVE_POINTS);
     int step = 2;
 
     for (int y = 0; y < h; y += step) {
-//        int currentIndex = 0;
+        cout << "drawing point cloud" << endl;
+
+        int currentIndex = 0;
         for (int x = 0; x < w; x += step) {
-            if (kinect.getDistanceAt(x, y) > 0) {
-                mesh.addColor(kinect.getColorAt(x, y));
-                mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
-                //                mesh.addIndex(currentIndex);
-                //                if(currentIndex>0 && x + step < w && kinect.getDistanceAt(x+step, y) > 0){
-                //only add the second index if the vertex is not the first, nor the last
-                //                    mesh.addIndex(currentIndex);
-                //                }
-                //                currentIndex++;
+//            cout << "distance is " << kinect.ofxKinect::getDistanceAt(x, y) << endl;
+
+            if (kinect.ofxKinect::getDistanceAt(x, y) > 0) {
+//                cout << "inside distance " << endl;
+
+                mesh.addColor(kinect.ofxKinect::getColorAt(x, y));
+//                cout << "inside color" << endl;
+                mesh.addVertex(kinect.ofxKinect::getWorldCoordinateAt(x, y));
+//                                mesh.addIndex(currentIndex);
+//                                if(currentIndex>0 && x + step < w && kinect.getDistanceAt(x+step, y) > 0){
+////                only add the second index if the vertex is not the first, nor the last
+//                                    mesh.addIndex(currentIndex);
+//                                }
+//                                currentIndex++;
             }
         }
     }
     glPointSize(3);
-    ofPushMatrix();
+//    ofPushMatrix();
     // the projected points are 'upside down' and 'backwards'
     ofScale(1, -1, -1);
     ofTranslate(0, 0, -1000); // center the points a bit
     ofEnableDepthTest();
     mesh.drawVertices();
     ofDisableDepthTest();
-    ofPopMatrix();
+//    ofPopMatrix();
 
 }

@@ -1676,6 +1676,8 @@
 					../../../addons/ofxOpenCv/libs/opencv/include/opencv2/stitching/detail,
 					../../../addons/ofxOpenCv/libs/opencv/include/opencv2/stitching,
 					../../../addons/ofxOpenCv/libs/opencv/include/opencv2/photo,
+					../../../addons/ofxBox2D/libs,
+					../../../addons/ofxBox2D/src,
 				);
 				ICON = "$(ICON_NAME_DEBUG)";
 				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
@@ -1689,6 +1691,7 @@
 					"$(PROJECT_DIR)/ofxKinect/libs/libusb-1.0/lib/osx",
 					"$(PROJECT_DIR)/libs/opencv/lib/osx",
 					../../../addons/ofxOpenCv/libs,
+					../../../addons/ofxBox2D/libs,
 				);
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
@@ -1747,6 +1750,8 @@
 					../../../addons/ofxOpenCv/libs/opencv/include/opencv2/stitching/detail,
 					../../../addons/ofxOpenCv/libs/opencv/include/opencv2/stitching,
 					../../../addons/ofxOpenCv/libs/opencv/include/opencv2/photo,
+					../../../addons/ofxBox2D/libs,
+					../../../addons/ofxBox2D/src,
 				);
 				ICON = "$(ICON_NAME_RELEASE)";
 				ICON_FILE = "$(ICON_FILE_PATH)$(ICON)";
@@ -1760,6 +1765,7 @@
 					"$(PROJECT_DIR)/ofxKinect/libs/libusb-1.0/lib/osx",
 					"$(PROJECT_DIR)/libs/opencv/lib/osx",
 					../../../addons/ofxOpenCv/libs,
+					../../../addons/ofxBox2D/libs,
 				);
 				OTHER_LDFLAGS = (
 					"$(OF_CORE_LIBS)",
