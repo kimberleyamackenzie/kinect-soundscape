@@ -76,6 +76,53 @@ void ofApp::setup(){
 //    light.setSpotlight(10, 10);
     
 //    n = 0;
+    
+    image.load("test.png");
+    image.resize(200, 200);
+
+
+    backgroundMesh.setMode(OF_PRIMITIVE_LINES);
+    backgroundMesh.enableColors();
+    backgroundMesh.enableIndices();
+    float intensityThreshold = 150.0;
+    int w = image.getWidth();
+    int h = image.getHeight();
+    for (int x = 0; x < w; ++x){
+        for (int y = 0; y < h; ++y) {
+            ofColor c = image.getColor(x, y);
+            float intensity = c.getLightness();
+            if(intensity >= intensityThreshold) {
+                float saturation = c.getSaturation();
+                float z = ofMap(saturation, 0, 255, -100, 100);
+                ofVec3f pos(x * 4, y * 4, z);
+                backgroundMesh.addVertex(pos);
+                backgroundMesh.addColor(c);
+            }
+        }
+    }
+    
+    float connectionDistance = 30;
+    int numVerts = backgroundMesh.getNumVertices();
+    for (int a=0; a<numVerts; ++a) {
+        ofVec3f verta = backgroundMesh.getVertex(a);
+        for (int b=a+1; b<numVerts; ++b) {
+            ofVec3f vertb = backgroundMesh.getVertex(b);
+            float distance = verta.distance(vertb);
+            if (distance <= connectionDistance) {
+                backgroundMesh.addIndex(a);
+                backgroundMesh.addIndex(b);
+            }
+        }
+    }
+    
+    
+    userMesh.setMode(OF_PRIMITIVE_LINES);
+    userMesh.enableColors();
+    userMesh.enableIndices();
+    
+
+
+    
 }
 
 //--------------------------------------------------------------
@@ -148,14 +195,13 @@ void ofApp::draw(){
     
 //    ofSetColor(255,255,255);
     
-    cout << "serial is" << kinect.getSerial() << endl;
 
     
-    if(bDrawPointCloud) {
-        easyCam.begin();
-        drawPointCloud();
-        easyCam.end();
-    }
+//    if(bDrawPointCloud) {
+//        easyCam.begin();
+//        drawPointCloud();
+//        easyCam.end();
+//    }
 //    } else {
 //
 //
@@ -169,9 +215,17 @@ void ofApp::draw(){
 //
 //    }
 
-
+//    image.draw(0, 0);
+    ofColor centerColor = ofColor(85, 78, 68);
+    ofColor edgeColor(0, 0, 0);
+    ofBackgroundGradient(centerColor, edgeColor, OF_GRADIENT_CIRCULAR);
+    
+    easyCam.begin();
     ofPushMatrix();
-
+    ofTranslate(-ofGetWidth()/2, -ofGetHeight()/2);
+    backgroundMesh.draw();
+    ofPopMatrix();
+    easyCam.end();
 
     // Could use below syntax to redefine the field of view
     //    ofTranslate(200, 50, - 100);
@@ -461,46 +515,67 @@ void ofApp::draw(){
             }
         }
          
-//         ofPushStyle();
-//         for (int n = 0; n < (pointCollection.size()); n ++){
-//             ofPath path;
-//             //        ofSetLineWidth(5.f);
-//             path.setColor(ofColor::orangeRed);
-//             //        ofSetColor(ofColor::orangeRed);
+//             for (int n = 0; n < (pointCollection.size()); n ++){
+//             ofPolyline polyline;
+//                 colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+//                 radii.push_back(ofRandom(0, 1));
+//         ofRotateZ(45);
+
+//                 if(n == (pointCollection.size() - 1)){
+//                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+//                 } else {
+//                     radii[n] += 0.1;
 //
-//             float r = radius;
-//             //        while(r > 0.f && pointCollection.size() > 0){
-//             //
-//             //            ofDrawCircle((pointCollection.back().x + 300), (pointCollection.back().y - 50), 50);
-//             //            r -= 200.f;
-//             //        }
-//             //        path.circle(pointCollection[n].x, pointCollection[n].y, r);
-//             ofDrawSphere(pointCollection[n].x, pointCollection[n].y, r);
+//                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+//                 }
+//                 ofSetColor(colors[n]);
+//                 polyline.draw();
 //
-//             //             ofTranslate(50, 50);
-//             //             ofScale(.5, .5);
-//             //        path.scale(1.1, 1.1);
-//             path.draw();
-//             //                        polyline.close();
-//             //                    n += 1;
-//         }
+//             }
          
-             for (int n = 0; n < (pointCollection.size()); n ++){
-             ofPolyline polyline;
-                 colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-                 radii.push_back(ofRandom(0, 1));
-                 if(n == (pointCollection.size() - 1)){
-                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
-                 } else {
-                     radii[n] += 0.1;
-
-                    polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+         
+         
+         if(pointCollection.size() > 0){
+         ofVec3f nextVertex(pointCollection.back().x, pointCollection.back().y);
+         userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+         userMesh.addVertex(nextVertex);
+         }
+         
+         float connectionDistance = 80;
+         int numVerts = userMesh.getNumVertices();
+         for (int a=0; a<numVerts; ++a) {
+             ofVec3f verta = userMesh.getVertex(a);
+             for (int b=a+1; b<numVerts; ++b) {
+                 ofVec3f vertb = userMesh.getVertex(b);
+                 float distance = verta.distance(vertb);
+                 if (distance <= connectionDistance) {
+                     // In OF_PRIMITIVE_LINES, every pair of vertices or indices will be
+                     // connected to form a line
+                     userMesh.addIndex(a);
+                     userMesh.addIndex(b);
                  }
-                 ofSetColor(colors[n]);
-                 polyline.draw();
-
              }
-//         ofPopStyle();
+         }
+         
+         userMesh.draw();
+         
+//         for (int n = 0; n < (pointCollection.size()); n ++){
+//             ofPolyline polyline;
+//             colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+//             xPositions.push_back(ofRandom(0, pointCollection[n].x));
+//             yPositions.push_back(ofRandom(0, pointCollection[n].y));
+//             ofSetColor(colors[n]);
+//             if(n == (pointCollection.size() - 1)){
+//                 ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
+//
+//              } else {
+//                  yPositions[n] += 2;
+//                  if(yPositions[n] < pointCollection[n].y){
+//                  ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
+//                  }
+//
+//              }
+//         }
          ofPopMatrix();
 
 

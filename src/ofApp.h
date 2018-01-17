@@ -95,6 +95,8 @@ public:
 
     vector<ofPoint> pointCollection;
     vector<float> radii;
+    vector<integer_t> xPositions;
+    vector<integer_t> yPositions;
 
     float radius = 0.1;
 
@@ -103,6 +105,10 @@ public:
     ofLight light;
 
     vector<ofColor>   colors;
+    
+    ofMesh backgroundMesh;
+    ofMesh userMesh;
+    ofImage image;
 
     
     
