@@ -112,6 +112,12 @@ public:
     float radius = 0.1;
     ofPolyline line;
     int xPos;
+    
+    // Boolean for circle visualization
+    bool bCircleVisualization;
+    
+    // Boolean for line visualization
+    bool bLineVisualization;
 
     // Relating to visualizations, mesh and otherwise
     vector<ofColor>   colors;

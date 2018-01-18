@@ -76,6 +76,12 @@ void ofApp::setup(){
     // Set frame rate to ensure visualizations operate on same frame rate as Kinect is updating
     ofSetFrameRate(60);
     
+    // Boolean for circle visualization
+    bCircleVisualization = false;
+    
+    // Boolean for line visualization
+    bLineVisualization = false;
+    
     // Setup for a mesh that would become a background (not user generated)
     // Boolean for showing background mesh (not user generated)
     bBackgroundMesh = false;
@@ -445,45 +451,48 @@ void ofApp::draw(){
             }
         }
          
-         // // Visualizations that trigger the creation of circles that start at a randomized size and get gradually larger relative to their starting size as the frames increase
-         // // N number of times, as long as we don't equal or surpass how many points of hand positions we have
-         // for (int n = 0; n < (pointCollection.size()); n ++){
-            // // Create a polyline
-            // ofPolyline polyline;
-            // // Get a random color, and push it into a vector of colors so the circle will remain the same color throughout the program
-            // colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-            // // Same as above but with the radius of the circle
-            // radii.push_back(ofRandom(0, 1));
-            // // Rotating the depth around the center of the OF grad created a neat effect
-            // ofRotateZ(45);
+          // Visualizations that trigger the creation of circles that start at a randomized size and get gradually larger relative to their starting size as the frames increase
+         if(bCircleVisualization){
+          // N number of times, as long as we don't equal or surpass how many points of hand positions we have
+          for (int n = 0; n < (pointCollection.size()); n ++){
+             // Create a polyline
+             ofPolyline polyline;
+             // Get a random color, and push it into a vector of colors so the circle will remain the same color throughout the program
+             colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+             // Same as above but with the radius of the circle
+             radii.push_back(ofRandom(0, 1));
+             // Rotating the depth around the center of the OF grad created a neat effect
+             ofRotateZ(45);
             // If we are creating a circle for the first time, give it that random radius, and draw the polyline going from 0 to 360 to make a circle.  Otherwise, save the radius as .1 larger than the last frame and set the color to the correlating n color, and draw it.
-                 // if(n == (pointCollection.size() - 1)){
-                    // polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
-                 // } else {
-                     // radii[n] += 0.1;
-                    // polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
-                 // }
-                 // ofSetColor(colors[n]);
-                 // polyline.draw();
-         // }
+                  if(n == (pointCollection.size() - 1)){
+                     polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+                  } else {
+                      radii[n] += 0.1;
+                     polyline.arc(pointCollection[n].x, pointCollection[n].y, radii[n], radii[n], 0, 360);
+                  }
+                  ofSetColor(colors[n]);
+                  polyline.draw();
+          }
+         }
          
-         // // Similiar logic as above, but with lines that come from a set position on the top of the screen and go down to the users hand position
-            // for (int n = 0; n < (pointCollection.size()); n ++){
-                 // ofPolyline polyline;
-                 // colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-                 // xPositions.push_back(ofRandom(0, pointCollection[n].x));
-                 // yPositions.push_back(ofRandom(0, pointCollection[n].y));
-                 // ofSetColor(colors[n]);
-                 // if(n == (pointCollection.size() - 1)){
-                      // ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
-                  // } else {
-                       // yPositions[n] += 2;
-                       // if(yPositions[n] < pointCollection[n].y){
-                       // ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
-                      // }
-                  // }
-             // }
-         
+          // Similiar logic as above, but with lines that come from a set position on the top of the screen and go down to the users hand position
+         if(bLineVisualization){
+             for (int n = 0; n < (pointCollection.size()); n ++){
+                  ofPolyline polyline;
+                  colors.push_back(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+                  xPositions.push_back(ofRandom(0, pointCollection[n].x));
+                  yPositions.push_back(ofRandom(0, pointCollection[n].y));
+                  ofSetColor(colors[n]);
+                  if(n == (pointCollection.size() - 1)){
+                       ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
+                   } else {
+                        yPositions[n] += 2;
+                        if(yPositions[n] < pointCollection[n].y){
+                        ofDrawLine(xPositions[n], yPositions[n], pointCollection[n].x, pointCollection[n].y);
+                       }
+                   }
+              }
+         }
          // Creating the user generated mesh from joint positions during each frame
          // As long as there are previous hand positions and joint positions to reference, create vertices based on last recorded hand and joint positions
          if(pointCollection.size() > 0 && bodyJointPointCollection.size() > 0){
