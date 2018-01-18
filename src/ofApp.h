@@ -14,6 +14,7 @@ public:
     
     // for ofxKinect mesh drawing
     void drawPointCloud();
+    
     // When a known gesture is recognized
     void handEvent(ofxOpenNIGestureEvent & event);
 
@@ -81,6 +82,18 @@ public:
     int thresholdValue;
     int nearThreshold;
     int farThreshold;
+    
+    // Boolean for triggered gathering point cloud data from Kinect
+    bool bKinectDepthPointCloud;
+    
+    // Boolean for drawing the 'skeleton'
+    bool bDrawnSkeleton;
+    
+    // Boolean for 'drawing' with your hand
+    bool bHandDrawing;
+    
+    // Boolean for showing background mesh (not user generated)
+    bool bBackgroundMesh;
     
     // used for viewing and manipulating meshes
     ofEasyCam easyCam;
