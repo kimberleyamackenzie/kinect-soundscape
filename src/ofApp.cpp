@@ -276,6 +276,8 @@ void ofApp::draw(){
                 float y = joint.getProjectivePosition().y;
                 pos.set(x, y);
                 
+                bodyJointPointCollection.push_back(pos);
+
                 // Draw a circle at each joint, if you're drawing the skeleton
                 if(bDrawnSkeleton){
                     ofDrawCircle(pos.x, pos.y, 10);
@@ -482,17 +484,19 @@ void ofApp::draw(){
                   // }
              // }
          
-         // Creating the user generated mesh from hand positions during each frame
-         // As long as there are previous hand positions to reference
-         if(pointCollection.size() > 0){
+         // Creating the user generated mesh from joint positions during each frame
+         // As long as there are previous hand positions and joint positions to reference, create vertices based on last recorded hand and joint positions
+         if(pointCollection.size() > 0 && bodyJointPointCollection.size() > 0){
              // Play with adding depth to user generated mesh
-             float z = ofRandom(-50, 50);
-             // Create a vector based on the last position the hand was in and (potentially) the randomized depth
-             ofVec3f nextVertex(pointCollection.back().x, pointCollection.back().y, z);
+             float z = ofRandom(-150, 150);
+             // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
+             ofVec3f handVertex(pointCollection.back().x, pointCollection.back().y, z);
+             ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
              // Make this piece of the mesh a randomized color
              userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-             // Add this vertex to the user generated mesh
-             userMesh.addVertex(nextVertex);
+             // Add vertices to the user generated mesh
+             userMesh.addVertex(handVertex);
+             userMesh.addVertex(bodyVertex);
              // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
              offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
          }

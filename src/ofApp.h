@@ -101,6 +101,9 @@ public:
     // Collection of hand positions used in sound cuing, mesh-making, and visualization generating
     vector<ofPoint> pointCollection;
     
+    // Collection of joint positions used in sound cuing, mesh-making, and visualization generating
+    vector<ofVec2f> bodyJointPointCollection;
+    
     // Relating to non-mesh visualizations
     vector<float> radii;
     vector<integer_t> xPositions;
