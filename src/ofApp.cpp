@@ -10,6 +10,7 @@ void ofApp::setup(){
     kinect.setMirror(true);
     kinect.addDepthGenerator();
     kinect.addUserGenerator();
+    kinect.setMaxNumUsers(4);
     
     // Managing the kinect with ofxKinect commands in addition to above ofxOpenNI commands
     kinect.ofxKinect::init();
@@ -133,7 +134,7 @@ void ofApp::setup(){
     userMesh.setMode(OF_PRIMITIVE_LINES);
     userMesh.enableColors();
     userMesh.enableIndices();
-
+    
 }
 
 //--------------------------------------------------------------
@@ -161,7 +162,6 @@ void ofApp::update(){
         vert.z += (ofSignedNoise(time*timeScale+timeOffsets.z)) * displacementScale;
         userMesh.setVertex(i, vert);
     }
-
     
     // Creating a mesh/contours/point cloud from the user based on Kinect data
     if(bKinectDepthPointCloud && kinect.isFrameNew()) {
@@ -237,9 +237,6 @@ void ofApp::draw(){
         // Make that user the person who's skeleton we're tracking.  Would need to mess around here for logic around tracking multiple bodies.
         ofxOpenNIUser user = kinect.getTrackedUser(m);
 
-        // Syntax for getting a specific joint (rather than interating through all)
-        ofxOpenNIJoint trackedJoint = user.getJoint(JOINT_RIGHT_ELBOW);
-
         // For the total count of limbs that the Kinect identifies on the user
         for(int i = 0; i < user.getNumLimbs(); i ++){
             // Go through the ofxOpenNI collection of limbs
@@ -289,50 +286,51 @@ void ofApp::draw(){
                     ofDrawCircle(pos.x, pos.y, 10);
                 }
                 
+                // Find a random joint from enum of all joints (without accounting for 'no joint' and 'total joints'
+                Joint triggerJoint = Joint(rand()% 15);
+                // Syntax for getting a specific joint (rather than interating through all).  In this case, finding that specific random joint to trigger sounds
+                ofxOpenNIJoint soundTriggeringJoint = user.getJoint(triggerJoint);
+               
+                ofVec2f soundTriggerPosition;
 
-                //                for (int xX = 0; xX < 700; xX += 7){
-                //
-                //                    // This if statement has every possible point has a sound attached to it, and makes total cacophany (fun but annoying to my neighbors)
-                //                    //                if(xX < floor(handPosition.x) && floor(handPosition.x) < (xX + 10)) {
-                //
-                //                    // If the position of the hand in space matches the given value of xX
-                //                    if(xX == floor(x)) {
-                //
-                //                        // Then set the speed of the sound based on the hand's y position. If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
-                //                        speed = abs((x - y) / x * 3.0);
-                //                        pianoNotes[j].setSpeed(speed);
-                //
-                //                        // And now we set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
-                //                        volume = ofLerp(volume, 1, 0.8); // jump quickly to 1
-                //
-                //                        // And we play it!
-                //                        pianoNotes[j].play();
-                //
-                //                        // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
-                //                        //                    if(pianoNotes[j].isPlaying()){
-                //                        //                        pianoNotes[i].setLoop(true);
-                //                        //                        cout << "the y position is " << handPosition.y << "and the speed is " << speed << endl;
-                //                        //                    }
-                //
-                //                        // And this is the start of some logic to create a super simplistic visualization of the positions at which the tracked hand trigers sound
-                //                        //                    if (pianoNotes[i].isPlaying()) {// Random color
-                //                        //                        ofSetColor(ofRandom(0, 255), ofRandom(0, 255), ofRandom(0, 255), 20);
-                //                        //                        ofDrawCircle(handPosition.x, handPosition.y, 15);}
-                //                        //                    ofDisableAlphaBlending();
-                //                        //                    }
-                //                    }
-                //
-                //                    // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
-                //                    if(j < pianoNotes.size()) {
-                //                        j += 1;
-                //                    }else {
-                //                        j = 0;
-                //                    }
-                //}
-                // Otherwise, the skeletal tracking monitor circle is set to false, and is red, signaling that a certain joint cannot be identified
-            }else{
-                mode = false;
-            }
+                float soundTriggerX = soundTriggeringJoint.getProjectivePosition().x;
+                float soundTriggerY = soundTriggeringJoint.getProjectivePosition().y;
+                soundTriggerPosition.set(soundTriggerX, soundTriggerY);
+                
+//                soundTriggerJointPointCollection.push_back(soundTriggerPosition);
+
+                for (int xX = 0; xX < 700; xX += 7){
+                    if(xX < floor(soundTriggerPosition.x) && floor(soundTriggerPosition.x) < (xX + 10)) {
+
+                    // If the position of the hand in space matches the given value of xX
+                    if(xX == floor(soundTriggerPosition.x)) {
+
+                        // Then set the speed of the sound based on the hand's y position. If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
+                        speed = abs((soundTriggerPosition.x - soundTriggerPosition.y) / x * 3.0);
+                        pianoNotes[j].setSpeed(speed);
+
+                        // And now we set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
+                        volume = ofLerp(volume, 1, 0.8); // jump quickly to 1
+
+                        // And we play it!
+                        pianoNotes[j].play();
+
+                        // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
+                        //                    if(pianoNotes[j].isPlaying()){
+                        //                        pianoNotes[i].setLoop(true);
+                        //                    }
+
+                    }
+
+                    // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
+                    if(j < pianoNotes.size()) {
+                        j += 1;
+                    }else {
+                        j = 0;
+                    }
+                }
+                }
+        }
         }
         
         // And now, for the total count of hands the Kinect identifies as being tracked
@@ -434,12 +432,6 @@ void ofApp::draw(){
                     //                        cout << "the y position is " << handPosition.y << "and the speed is " << speed << endl;
                     //                    }
                     
-                    // And this is the start of some logic to create a super simplistic visualization of the positions at which the tracked hand trigers sound
-                    //                    if (pianoNotes[i].isPlaying()) {// Random color
-                    //                        ofSetColor(ofRandom(0, 255), ofRandom(0, 255), ofRandom(0, 255), 20);
-                    //                        ofDrawCircle(handPosition.x, handPosition.y, 15);}
-                    //                    ofDisableAlphaBlending();
-                    //                    }
                 }
                 
                 // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
@@ -472,7 +464,7 @@ void ofApp::draw(){
                   }
                   ofSetColor(colors[n]);
                   polyline.draw();
-          }
+            }
          }
          
           // Similiar logic as above, but with lines that come from a set position on the top of the screen and go down to the users hand position
@@ -495,16 +487,27 @@ void ofApp::draw(){
          }
          // Creating the user generated mesh from joint positions during each frame
          // As long as there are previous hand positions and joint positions to reference, create vertices based on last recorded hand and joint positions
-         if(pointCollection.size() > 0 && bodyJointPointCollection.size() > 0){
+         if(pointCollection.size() > 0){
              // Play with adding depth to user generated mesh
              float z = ofRandom(-150, 150);
              // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
              ofVec3f handVertex(pointCollection.back().x, pointCollection.back().y, z);
-             ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
              // Make this piece of the mesh a randomized color
              userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
              // Add vertices to the user generated mesh
              userMesh.addVertex(handVertex);
+             // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
+             offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
+         }
+         
+         if(bodyJointPointCollection.size() > 0){
+             // Play with adding depth to user generated mesh
+             float z = ofRandom(-150, 150);
+             // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
+             ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
+             // Make this piece of the mesh a randomized color
+             userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+             // Add vertices to the user generated mesh
              userMesh.addVertex(bodyVertex);
              // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
              offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));

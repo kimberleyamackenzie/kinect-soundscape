@@ -104,6 +104,9 @@ public:
     // Collection of joint positions used in sound cuing, mesh-making, and visualization generating
     vector<ofVec2f> bodyJointPointCollection;
     
+    // Collection of selective joint positions used for sound cuing without disaster cacaphony!
+    vector<ofVec2f> soundTriggerJointPointCollection;
+    
     // Relating to non-mesh visualizations
     vector<float> radii;
     vector<integer_t> xPositions;
@@ -127,6 +130,6 @@ public:
     ofMesh userMesh;
     ofImage image;
     vector<ofVec3f> offsets;
-
+    
 };
 
