@@ -43,6 +43,18 @@ void ofApp::setup(){
         pianoNotes.push_back(player);
     }
     
+    for(int i = 1; i<10; i++){
+        char note[1024];
+        sprintf(note, "extendednote%d.wav", i);
+        ofSoundPlayer player;
+        player.load(note);
+        player.setMultiPlay(true);
+        extendedNotes.push_back(player);
+    }
+    
+    // Set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
+    ofSoundSetVolume(ofLerp(0, 1, 0.8));
+    
     // Fun with variables!
     k = 0;
 
@@ -135,6 +147,23 @@ void ofApp::setup(){
     userMesh.enableColors();
     userMesh.enableIndices();
     
+    // Scale for the meshes to be slightly larger in reference to the Kinect's field of view
+//    ofScale(1.25, 1.25);
+    
+    
+//    ofDisableArbTex();
+//    ofLoadImage(texture, "texture.jpeg");
+    
+    ofDisableAlphaBlending();
+    ofEnableDepthTest();
+//    light.enable();
+//    light.setPosition(ofVec3f(100,100,200));
+//    light.lookAt(ofVec3f(0,0,0));
+    
+    filename = "screen.png";
+    bUseViewport = false;
+    
+
 }
 
 //--------------------------------------------------------------
@@ -142,6 +171,9 @@ void ofApp::update(){
     
     // During update, the kinect should probably update.  Maybe.
     kinect.update();
+    
+    ofSoundUpdate();
+
     
     // Easy frame counter
     frame += 1;
@@ -221,7 +253,8 @@ void ofApp::draw(){
         ofPopMatrix();
         easyCam.end();
     }
-
+    
+    
     // Could use below syntax to redefine the field of view depending on physical set-up of space
     // ofTranslate(200, 50, - 100);
     
@@ -243,7 +276,7 @@ void ofApp::draw(){
             ofxOpenNILimb limb = user.getLimb((enum Limb) i);
             
             // And if that limb is seen on the user
-            if( limb.isFound()){
+            if(bDrawnSkeleton && limb.isFound()){
                 
                 // Find the positions of the joints for that limb
                 float x1 = limb.getStartJoint().getProjectivePosition().x;
@@ -259,7 +292,7 @@ void ofApp::draw(){
         }
         
         // Create the vector where the joint's x/y location will be stored
-        ofVec2f pos;
+        ofVec2f jointPos;
         
         // For the total count of joints that the Kinect identifies on the user
         for( int i = 0 ; i < user.getNumJoints(); i ++){
@@ -270,20 +303,67 @@ void ofApp::draw(){
             int j = 0;
             float volume = 0;
             float speed;
-            
+        
             // And if that joint is seen on the user
             if(joint.isFound()){
+                
+                if(joint.getName() == "JOINT_TORSO"){
+                    color = ofColor::blueViolet;
+                } else if (joint.getName() == "JOINT_NECK"){
+                    color = ofColor::crimson;
+                } else if (joint.getName() == "JOINT_HEAD"){
+                    color = ofColor::darkGreen;
+                } else if (joint.getName() == "JOINT_LEFT_SHOULDER"){
+                    color = ofColor::darkCyan;
+                } else if (joint.getName() == "JOINT_LEFT_ELBOW"){
+                    color = ofColor::fuchsia;
+                } else if (joint.getName() == "JOINT_LEFT_HAND"){
+                    color = ofColor::dimGray;
+                } else if (joint.getName() == "JOINT_RIGHT_SHOULDER"){
+                    color = ofColor::goldenRod;
+                } else if (joint.getName() == "JOINT_RIGHT_ELBOW"){
+                    color = ofColor::hotPink;
+                } else if (joint.getName() == "JOINT_RIGHT_HAND"){
+                    color = ofColor::mediumTurquoise;
+                } else if (joint.getName() == "JOINT_LEFT_HIP"){
+                    color = ofColor::orangeRed;
+                } else if (joint.getName() == "JOINT_LEFT_KNEE"){
+                    color = ofColor::peachPuff;
+                } else if (joint.getName() == "JOINT_LEFT_FOOT"){
+                    color = ofColor::sienna;
+                } else if (joint.getName() == "JOINT_RIGHT_HIP"){
+                    color = ofColor::plum;
+                } else if (joint.getName() == "JOINT_RIGHT_KNEE"){
+                    color = ofColor::orchid;
+                } else if (joint.getName() == "JOINT_RIGHT_FOOT"){
+                    color = ofColor::olive;
+                }
                 
                 // And then we find the position of that joint, set it to the (image)vector we declared above, to draw a circle of radius 10 at that point
                 float x = joint.getProjectivePosition().x;
                 float y = joint.getProjectivePosition().y;
-                pos.set(x, y);
+                jointPos.set(x, y);
                 
-                bodyJointPointCollection.push_back(pos);
+                bodyJointPointCollection.push_back(jointPos);
+                
+                if(bodyJointPointCollection.size() > 0){
+                    // Play with adding depth to user generated mesh
+                    float z = ofRandom(-150, 150);
+                    // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
+                    ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
+                    // Make this piece of the mesh a randomized color
+                    // userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+                    // add color based on joint
+                    userMesh.addColor(color);
+                    // Add vertices to the user generated mesh
+                    userMesh.addVertex(bodyVertex);
+                    // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
+                    offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
+                }
 
                 // Draw a circle at each joint, if you're drawing the skeleton
                 if(bDrawnSkeleton){
-                    ofDrawCircle(pos.x, pos.y, 10);
+                    ofDrawCircle(jointPos.x, jointPos.y, 10);
                 }
                 
                 // Find a random joint from enum of all joints (without accounting for 'no joint' and 'total joints'
@@ -300,17 +380,14 @@ void ofApp::draw(){
 //                soundTriggerJointPointCollection.push_back(soundTriggerPosition);
 
                 for (int xX = 0; xX < 700; xX += 7){
-                    if(xX < floor(soundTriggerPosition.x) && floor(soundTriggerPosition.x) < (xX + 10)) {
+//                    if(xX < floor(jointPos.x) && floor(jointPos.y) < (xX + 7)) {
 
                     // If the position of the hand in space matches the given value of xX
-                    if(xX == floor(soundTriggerPosition.x)) {
+                    if(xX == floor(jointPos.x)) {
 
                         // Then set the speed of the sound based on the hand's y position. If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
-                        speed = abs((soundTriggerPosition.x - soundTriggerPosition.y) / x * 3.0);
-                        pianoNotes[j].setSpeed(speed);
-
-                        // And now we set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
-                        volume = ofLerp(volume, 1, 0.8); // jump quickly to 1
+//                        speed = abs((soundTriggerPosition.x - soundTriggerPosition.y) / x * 3.0);
+//                        pianoNotes[j].setSpeed(speed);
 
                         // And we play it!
                         pianoNotes[j].play();
@@ -320,7 +397,7 @@ void ofApp::draw(){
                         //                        pianoNotes[i].setLoop(true);
                         //                    }
 
-                    }
+//                    }
 
                     // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
                     if(j < pianoNotes.size()) {
@@ -380,13 +457,13 @@ void ofApp::draw(){
             k += 1;
             
             // In increments of 7 (because 1 was too small and 10 seemed like too much 'empty' space/sound, iterate through the stops of the x axis of the Kinect's field of view
-            for (int xX = 0; xX < 700; xX += 4){
+            for (int xX = 0; xX < 700; xX += 5){
                 
                 // This if statement has every possible point has a sound attached to it, and makes total cacophany (fun but annoying to my neighbors)
-                //                if(xX < floor(handPosition.x) && floor(handPosition.x) < (xX + 10)) {
+                                if(xX < floor(handPosition.x) && floor(handPosition.x) < (xX + 5)) {
                 
                 // If the position of the hand in space matches the given value of xX
-                if(xX == floor(handPosition.x)) {
+//                if(xX == floor(handPosition.x)) {
                     
                     // Then set the speed of the sound based on the hand's y position or based on the distance of the vectors from current from and 60 frames (1 second) ago.  Quick short movements results in extremely high pitched sounds, long slower movements results in slower, lower sounds.
                     //If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
@@ -412,30 +489,37 @@ void ofApp::draw(){
                     //Set the pan position of the sound (which speaker it's coming from) based on x.  (0, 0) is at the center of the sensor, so if you move signifiantly to the left or to the right, the sound shifts to be coming from either of those sides.
                     if(handPosition.x < -300){
                         pianoNotes[j].setPan(-1.0f);
+                    }else if (handPosition.x > 300){
+                        pianoNotes[j].setPan(1.0f);
+                    }else {
+                        pianoNotes[j].setPan(0.0f);
                     }
-                    if(handPosition.x > 300){
-                        pianoNotes[j].setPan(-1.0f);
-                    }
-                    
-                    // And now we set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
-                    volume = ofLerp(volume, 1, 0.8); // jump quickly to 1
-                    
+                        
                     // And we play it!
                     pianoNotes[j].play();
                     pointCollection.push_back(pt);
-
-                    
-                    
-                    // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
-                    //                    if(pianoNotes[j].isPlaying()){
-                    //                        pianoNotes[i].setLoop(true);
-                    //                        cout << "the y position is " << handPosition.y << "and the speed is " << speed << endl;
-                    //                    }
+                                    
+                    // Creating the user generated mesh from joint positions during each frame
+                    // As long as there are previous hand positions and joint positions to reference, create vertices based on last recorded hand and joint positions
+                    if(pointCollection.size() > 0){
+                        // Play with adding depth to user generated mesh
+                        float z = ofRandom(-150, 150);
+                        // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
+                        ofVec3f handVertex(pointCollection.back().x, pointCollection.back().y, z);
+                        // Make this piece of the mesh a randomized color
+                        // userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+                        // add color based on joint
+                        userMesh.addColor(ofColor::red);
+                        // Add vertices to the user generated mesh
+                        userMesh.addVertex(handVertex);
+                        // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
+                        offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
+                    }
                     
                 }
                 
                 // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
-                if(j < (pianoNotes.size() - 2)){
+                if(j < (pianoNotes.size() - 1)){
                     j += 1;
                 }else {
                     j = 0;
@@ -485,33 +569,8 @@ void ofApp::draw(){
                    }
               }
          }
-         // Creating the user generated mesh from joint positions during each frame
-         // As long as there are previous hand positions and joint positions to reference, create vertices based on last recorded hand and joint positions
-         if(pointCollection.size() > 0){
-             // Play with adding depth to user generated mesh
-             float z = ofRandom(-150, 150);
-             // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
-             ofVec3f handVertex(pointCollection.back().x, pointCollection.back().y, z);
-             // Make this piece of the mesh a randomized color
-             userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-             // Add vertices to the user generated mesh
-             userMesh.addVertex(handVertex);
-             // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
-             offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
-         }
          
-         if(bodyJointPointCollection.size() > 0){
-             // Play with adding depth to user generated mesh
-             float z = ofRandom(-150, 150);
-             // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
-             ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
-             // Make this piece of the mesh a randomized color
-             userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-             // Add vertices to the user generated mesh
-             userMesh.addVertex(bodyVertex);
-             // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
-             offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
-         }
+
          
          // Connect user generated vertices through referencing and creating indicies, based on the connection distance between vertices
          float connectionDistance = 80;
@@ -530,7 +589,7 @@ void ofApp::draw(){
              }
          }
          userMesh.draw();
-
+         
          ofPopMatrix();
         }
     }
@@ -597,7 +656,8 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 void ofApp::handEvent(ofxOpenNIGestureEvent & event){
     if(event.gestureName == "Wave"){
 //        kinect.stop();
-        kinect.close();
+        ofSaveFrame();
+//        kinect.close();
     }
     
 }

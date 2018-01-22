@@ -36,6 +36,9 @@ public:
     vector<ofSoundPlayer> pianoNotes;
     string note;
     
+    vector<ofSoundPlayer> extendedNotes;
+
+    
     // Counters
     int k;
     int frame;
@@ -130,6 +133,13 @@ public:
     ofMesh userMesh;
     ofImage image;
     vector<ofVec3f> offsets;
+    ofColor color;
+    
+    ofLight light;
+    
+    string filename;
+    Boolean bUseViewport;
+    
     
 };
 
