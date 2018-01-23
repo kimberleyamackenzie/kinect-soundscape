@@ -34,16 +34,26 @@ void ofApp::setup(){
     bHandDrawing = false;
     
     // Iterate through all the wav files to load them; allow them to play simultaneously to themselves, and push them into our collection for easy retrival later
-    for(int i = 1; i<80; i++){
+    for(int i = 1; i<92; i++){
         char note[1024];
         sprintf(note, "note%d.wav", i);
         ofSoundPlayer player;
         player.load(note);
         player.setMultiPlay(true);
+//        player.setLoop(true);
         pianoNotes.push_back(player);
     }
     
-    for(int i = 1; i<10; i++){
+//    for(int i = 1; i<13; i++){
+//        char note[1024];
+//        sprintf(note, "weird%d.wav", i);
+//        ofSoundPlayer player;
+//        player.load(note);
+//        player.setMultiPlay(true);
+//        pianoNotes.push_back(player);
+//    }
+    
+    for(int i = 1; i<2; i++){
         char note[1024];
         sprintf(note, "extendednote%d.wav", i);
         ofSoundPlayer player;
@@ -51,6 +61,8 @@ void ofApp::setup(){
         player.setMultiPlay(true);
         extendedNotes.push_back(player);
     }
+    
+    random_shuffle(pianoNotes.begin(), pianoNotes.end());
     
     // Set the volume for playback using ofLerp function to create some sound modulation and not be so tinny and singular
     ofSoundSetVolume(ofLerp(0, 1, 0.8));
@@ -147,15 +159,10 @@ void ofApp::setup(){
     userMesh.enableColors();
     userMesh.enableIndices();
     
-    // Scale for the meshes to be slightly larger in reference to the Kinect's field of view
-//    ofScale(1.25, 1.25);
+    // Scale for the meshes to be slightly larger and centered in reference to the Kinect's field of view
+    // ofScale(1.25, 1.25);
+      ofTranslate(500, 0);
     
-    
-//    ofDisableArbTex();
-//    ofLoadImage(texture, "texture.jpeg");
-    
-    ofDisableAlphaBlending();
-    ofEnableDepthTest();
 //    light.enable();
 //    light.setPosition(ofVec3f(100,100,200));
 //    light.lookAt(ofVec3f(0,0,0));
@@ -163,7 +170,6 @@ void ofApp::setup(){
     filename = "screen.png";
     bUseViewport = false;
     
-
 }
 
 //--------------------------------------------------------------
@@ -172,8 +178,8 @@ void ofApp::update(){
     // During update, the kinect should probably update.  Maybe.
     kinect.update();
     
-    ofSoundUpdate();
-
+    // Not sure what effect this has- messing around with including and not including to determine purpose
+    // ofSoundUpdate();
     
     // Easy frame counter
     frame += 1;
@@ -254,10 +260,6 @@ void ofApp::draw(){
         easyCam.end();
     }
     
-    
-    // Could use below syntax to redefine the field of view depending on physical set-up of space
-    // ofTranslate(200, 50, - 100);
-    
     // As long as there is a least one person being tracked...
     if(kinect.getNumTrackedUsers() > 0 ){
      for(int m = 0; m < kinect.getNumTrackedUsers(); m ++){
@@ -291,17 +293,16 @@ void ofApp::draw(){
             }
         }
         
-        // Create the vector where the joint's x/y location will be stored
-        ofVec2f jointPos;
-        
         // For the total count of joints that the Kinect identifies on the user
         for( int i = 0 ; i < user.getNumJoints(); i ++){
             // Go through the ofxOpenNI collection of limbs
             ofxOpenNIJoint joint = user.getJoint((enum Joint)i);
             
+            // Create the vector where the joint's x/y location will be stored
+            ofVec2f jointPos;
+            
             // Set up the variables we will need to manipulate as the hand moves through space to trigger sounds
             int j = 0;
-            float volume = 0;
             float speed;
         
             // And if that joint is seen on the user
@@ -342,6 +343,7 @@ void ofApp::draw(){
                 // And then we find the position of that joint, set it to the (image)vector we declared above, to draw a circle of radius 10 at that point
                 float x = joint.getProjectivePosition().x;
                 float y = joint.getProjectivePosition().y;
+//                float z = joint.getProjectivePosition().z;
                 jointPos.set(x, y);
                 
                 bodyJointPointCollection.push_back(jointPos);
@@ -368,39 +370,32 @@ void ofApp::draw(){
                 
                 // Find a random joint from enum of all joints (without accounting for 'no joint' and 'total joints'
                 Joint triggerJoint = Joint(rand()% 15);
+                
                 // Syntax for getting a specific joint (rather than interating through all).  In this case, finding that specific random joint to trigger sounds
                 ofxOpenNIJoint soundTriggeringJoint = user.getJoint(triggerJoint);
-               
                 ofVec2f soundTriggerPosition;
-
+                
                 float soundTriggerX = soundTriggeringJoint.getProjectivePosition().x;
                 float soundTriggerY = soundTriggeringJoint.getProjectivePosition().y;
                 soundTriggerPosition.set(soundTriggerX, soundTriggerY);
                 
 //                soundTriggerJointPointCollection.push_back(soundTriggerPosition);
 
-                for (int xX = 0; xX < 700; xX += 7){
+                for (int xX = 0; xX < 700; xX += 5){
 //                    if(xX < floor(jointPos.x) && floor(jointPos.y) < (xX + 7)) {
 
                     // If the position of the hand in space matches the given value of xX
                     if(xX == floor(jointPos.x)) {
 
                         // Then set the speed of the sound based on the hand's y position. If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
-//                        speed = abs((soundTriggerPosition.x - soundTriggerPosition.y) / x * 3.0);
-//                        pianoNotes[j].setSpeed(speed);
+                        speed = abs((jointPos.x - jointPos.y) / x * 3.0);
+                        pianoNotes[j].setSpeed(speed);
 
                         // And we play it!
                         pianoNotes[j].play();
 
-                        // There is potentially an artistic future where we may want some logic around looping particular sounds, so here this will stay for awhile.
-                        //                    if(pianoNotes[j].isPlaying()){
-                        //                        pianoNotes[i].setLoop(true);
-                        //                    }
-
-//                    }
-
                     // If the current increment of xX doesn't match the current x axis position of the tracked hand, we increment j to move on to the next potential sound file.  Since we have a limited number of files, and want to avoid errors relating to potentially wider fields of view than what exist in testing circumstances, if we end up iterating higher than the number of sound files we have, we reset that iterator to 0.
-                    if(j < pianoNotes.size()) {
+                    if(j < pianoNotes.size() - 1) {
                         j += 1;
                     }else {
                         j = 0;
@@ -437,21 +432,12 @@ void ofApp::draw(){
                 }
             }
             
-            position.set(hand.getPosition().x, hand.getPosition().y);
-            mathVectors.push_back(position);
+            mathVectors.push_back(pt);
             
             if(frame % 60 == 0){
                 diff = mathVectors[k] - mathVectors[k - 59];
                 angle = mathVectors[k - 59].angle(mathVectors[k]);
                 distance = mathVectors[k - 59].distance(mathVectors[k]);
-//                cout << distance << endl;
-//                cout << angle << endl;
-
-                
-                if(angle > 90){
-//                    pianoNotes.back().play();
-//                    cout << angle << endl;
-                }
             }
 
             k += 1;
@@ -471,18 +457,22 @@ void ofApp::draw(){
                     
                     if(distance < 25){
                         speed = 6;
-                    }
-                    if(distance > 25 && distance < 50){
+                    } else if(distance > 25 && distance < 50){
                         speed = 4;
-                    }
-                    if(distance > 50 && distance < 200){
+                    } else if(distance > 50 && distance < 100){
                         speed = abs((handPosition.x - handPosition.y) / handPosition.x * 3.0);
-                    }
-                    if(distance > 200 && distance < 350){
+                    } else if(distance > 100 && distance < 150){
+                        speed = .75;
+                    } else if(distance > 150 && distance < 200){
                         speed = .5;
-                    }
-                    if(distance > 350){
+                    } else if(distance > 200 && distance < 225){
+                        speed = .4;
+                    } else if(distance > 225 && distance < 240){
+                        speed = .3;
+                    } else if(distance > 240 && distance < 280){
                         speed = .2;
+                    } else if(distance > 280){
+                        speed = .1;
                     }
                     pianoNotes[j].setSpeed(speed);
                     
@@ -509,7 +499,7 @@ void ofApp::draw(){
                         // Make this piece of the mesh a randomized color
                         // userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
                         // add color based on joint
-                        userMesh.addColor(ofColor::red);
+                        userMesh.addColor(color);
                         // Add vertices to the user generated mesh
                         userMesh.addVertex(handVertex);
                         // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
@@ -656,7 +646,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 void ofApp::handEvent(ofxOpenNIGestureEvent & event){
     if(event.gestureName == "Wave"){
 //        kinect.stop();
-        ofSaveFrame();
+//        ofSaveFrame();
 //        kinect.close();
     }
     
