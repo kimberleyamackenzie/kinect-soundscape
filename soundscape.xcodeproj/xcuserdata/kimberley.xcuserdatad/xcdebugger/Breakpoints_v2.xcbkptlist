@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../addons/ofxOpenNi/src/ofxOpenNI.h"
-            timestampString = "538426818.276594"
+            timestampString = "538435673.064231"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "4"
@@ -26,7 +26,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../addons/ofxOpenNi/src/ofxOpenNI.h"
-            timestampString = "538426818.276878"
+            timestampString = "538435673.064535"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "3"
@@ -42,7 +42,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../addons/ofxOpenNi/src/ofxOpenNI.h"
-            timestampString = "538426818.276948"
+            timestampString = "538435673.064606"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "2"
@@ -58,7 +58,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../../addons/ofxOpenNi/src/ofxOpenNI.h"
-            timestampString = "538426818.27701"
+            timestampString = "538435673.0646681"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "1"
@@ -92,7 +92,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ofxKinect/src/ofxKinect.cpp"
-            timestampString = "538426818.277077"
+            timestampString = "538435673.064737"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "118"
@@ -108,11 +108,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/ofApp.cpp"
-            timestampString = "538426818.277281"
+            timestampString = "538512616.922775"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "553"
-            endingLineNumber = "553"
+            startingLineNumber = "567"
+            endingLineNumber = "567"
             landmarkName = "ofApp::draw()"
             landmarkType = "7">
          </BreakpointContent>
@@ -124,7 +124,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "ofxKinect/src/ofxKinect.h"
-            timestampString = "538426818.277774"
+            timestampString = "538435673.0654629"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "326"
@@ -140,11 +140,75 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "src/ofApp.cpp"
-            timestampString = "538426818.277968"
+            timestampString = "538512616.923133"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "512"
-            endingLineNumber = "512"
+            startingLineNumber = "526"
+            endingLineNumber = "526"
+            landmarkName = "ofApp::draw()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/ofApp.cpp"
+            timestampString = "538512616.923378"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "501"
+            endingLineNumber = "501"
+            landmarkName = "ofApp::draw()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/ofApp.cpp"
+            timestampString = "538512616.9235981"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "500"
+            endingLineNumber = "500"
+            landmarkName = "ofApp::draw()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/ofApp.cpp"
+            timestampString = "538512616.923804"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "410"
+            endingLineNumber = "410"
+            landmarkName = "ofApp::draw()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "src/ofApp.cpp"
+            timestampString = "538512659.274837"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "407"
+            endingLineNumber = "407"
             landmarkName = "ofApp::draw()"
             landmarkType = "7">
          </BreakpointContent>

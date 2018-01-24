@@ -161,16 +161,13 @@ void ofApp::setup(){
     
     // Scale for the meshes to be slightly larger and centered in reference to the Kinect's field of view
     // ofScale(1.25, 1.25);
-      ofTranslate(500, 0);
+//      ofTranslate(500, 0);
     
-//    light.enable();
-//    light.setPosition(ofVec3f(100,100,200));
-//    light.lookAt(ofVec3f(0,0,0));
-    
-    filename = "screen.png";
-    bUseViewport = false;
-    
-}
+    light.enable();
+    light.setPosition(ofVec3f(100,100,200));
+    light.lookAt(ofVec3f(0,0,0));
+
+ }
 
 //--------------------------------------------------------------
 void ofApp::update(){
@@ -259,6 +256,8 @@ void ofApp::draw(){
         ofPopMatrix();
         easyCam.end();
     }
+
+    ofPushMatrix();
     
     // As long as there is a least one person being tracked...
     if(kinect.getNumTrackedUsers() > 0 ){
@@ -343,7 +342,7 @@ void ofApp::draw(){
                 // And then we find the position of that joint, set it to the (image)vector we declared above, to draw a circle of radius 10 at that point
                 float x = joint.getProjectivePosition().x;
                 float y = joint.getProjectivePosition().y;
-//                float z = joint.getProjectivePosition().z;
+                float z = joint.getProjectivePosition().z;
                 jointPos.set(x, y);
                 
                 bodyJointPointCollection.push_back(jointPos);
@@ -369,18 +368,21 @@ void ofApp::draw(){
                 }
                 
                 // Find a random joint from enum of all joints (without accounting for 'no joint' and 'total joints'
-                Joint triggerJoint = Joint(rand()% 15);
+//                Joint triggerJoint = Joint(rand()% 15);
                 
                 // Syntax for getting a specific joint (rather than interating through all).  In this case, finding that specific random joint to trigger sounds
-                ofxOpenNIJoint soundTriggeringJoint = user.getJoint(triggerJoint);
-                ofVec2f soundTriggerPosition;
-                
-                float soundTriggerX = soundTriggeringJoint.getProjectivePosition().x;
-                float soundTriggerY = soundTriggeringJoint.getProjectivePosition().y;
-                soundTriggerPosition.set(soundTriggerX, soundTriggerY);
+//                ofxOpenNIJoint soundTriggeringJoint = user.getJoint(JOINT_LEFT_ELBOW);
+//                ofVec3f soundTriggerPosition;
+//
+//                float soundTriggerX = soundTriggeringJoint.getProjectivePosition().x;
+//                float soundTriggerY = soundTriggeringJoint.getProjectivePosition().y;
+//                float soundTriggerZ = soundTriggeringJoint.getProjectivePosition().z;
+//                soundTriggerPosition.set(soundTriggerX, soundTriggerY, soundTriggerZ);
                 
 //                soundTriggerJointPointCollection.push_back(soundTriggerPosition);
 
+
+                
                 for (int xX = 0; xX < 700; xX += 5){
 //                    if(xX < floor(jointPos.x) && floor(jointPos.y) < (xX + 7)) {
 
@@ -388,6 +390,19 @@ void ofApp::draw(){
                     if(xX == floor(jointPos.x)) {
 
                         // Then set the speed of the sound based on the hand's y position. If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
+                        
+                        if(jointPos.x < -300){
+                            pianoNotes[j].setPan(-1.0f);
+                        }else if (jointPos.x > 300){
+                            pianoNotes[j].setPan(1.0f);
+                        }else {
+                            pianoNotes[j].setPan(0.0f);
+                        }
+                        
+                        if(z < 900){
+                            pianoNotes[j].setLoop(true);
+                        }
+                        
                         speed = abs((jointPos.x - jointPos.y) / x * 3.0);
                         pianoNotes[j].setSpeed(speed);
 
@@ -421,6 +436,8 @@ void ofApp::draw(){
             ofPoint pt;
             pt.set(handPosition.x, handPosition.y);
             
+            cout << "z hand is " << handPosition.z << endl;
+            
             // Watch the gestures of that hand as a continuous line being drawn on the screen if that's your thing
             if(bHandDrawing){
                 line.addVertex(handPosition.x, handPosition.y);
@@ -450,18 +467,12 @@ void ofApp::draw(){
                 
                 // If the position of the hand in space matches the given value of xX
 //                if(xX == floor(handPosition.x)) {
-                    
+                
                     // Then set the speed of the sound based on the hand's y position or based on the distance of the vectors from current from and 60 frames (1 second) ago.  Quick short movements results in extremely high pitched sounds, long slower movements results in slower, lower sounds.
                     //If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
                     //Refactor into case statement later if you don't get too distracted
                     
-                    if(distance < 25){
-                        speed = 6;
-                    } else if(distance > 25 && distance < 50){
-                        speed = 4;
-                    } else if(distance > 50 && distance < 100){
-                        speed = abs((handPosition.x - handPosition.y) / handPosition.x * 3.0);
-                    } else if(distance > 100 && distance < 150){
+                    if(distance > 100 && distance < 150){
                         speed = .75;
                     } else if(distance > 150 && distance < 200){
                         speed = .5;
@@ -473,9 +484,12 @@ void ofApp::draw(){
                         speed = .2;
                     } else if(distance > 280){
                         speed = .1;
+                    } else {
+                        speed = abs((handPosition.x - handPosition.y) / handPosition.x * 3.0);
                     }
+
                     pianoNotes[j].setSpeed(speed);
-                    
+
                     //Set the pan position of the sound (which speaker it's coming from) based on x.  (0, 0) is at the center of the sensor, so if you move signifiantly to the left or to the right, the sound shifts to be coming from either of those sides.
                     if(handPosition.x < -300){
                         pianoNotes[j].setPan(-1.0f);
@@ -578,9 +592,12 @@ void ofApp::draw(){
                  }
              }
          }
-         userMesh.draw();
          
+         
+         userMesh.draw();
          ofPopMatrix();
+
+
         }
     }
 }
@@ -645,9 +662,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 void ofApp::handEvent(ofxOpenNIGestureEvent & event){
     if(event.gestureName == "Wave"){
-//        kinect.stop();
-//        ofSaveFrame();
-//        kinect.close();
+        kinect.close();
     }
     
 }
