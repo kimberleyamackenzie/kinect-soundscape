@@ -137,11 +137,11 @@ public:
     
     ofLight light;
     
-    string filename;
-    Boolean bUseViewport;
     
     
-    
+    ofSpherePrimitive sphere;
+    ofTexture mTex;
+    bool bSphereVisualization;
     
 };
 

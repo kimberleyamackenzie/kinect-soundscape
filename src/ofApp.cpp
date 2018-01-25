@@ -7,7 +7,7 @@ void ofApp::setup(){
     kinect.setup();
     kinect.setRegister(true);
     kinect.setRegistration(true);
-    kinect.setMirror(true);
+    kinect.setMirror(false);
     kinect.addDepthGenerator();
     kinect.addUserGenerator();
     kinect.setMaxNumUsers(4);
@@ -25,7 +25,7 @@ void ofApp::setup(){
     kinect.setMaxNumHands(6);
 
     // Custom event listener for gestures
-    ofAddListener(kinect.gestureEvent,this,&ofApp::handEvent);
+//    ofAddListener(kinect.gestureEvent,this,&ofApp::handEvent);
     
     // Boolean for drawing the 'skeleton'
     bDrawnSkeleton = false;
@@ -74,6 +74,7 @@ void ofApp::setup(){
     frame = 0;
 
     // Set up for drawing a mesh based on Kinect depth data
+    if(bKinectDepthPointCloud){
     colorImg.allocate(kinect.getWidth(), kinect.getHeight());
     grayImage.allocate(kinect.getWidth(), kinect.getHeight());
     grayThreshNear.allocate(kinect.getWidth(), kinect.getHeight());
@@ -86,6 +87,7 @@ void ofApp::setup(){
     depthImg2.allocate(kinect.getWidth(), kinect.getHeight());
     grayBg.allocate(320,240);
     grayDiff.allocate(kinect.getWidth(), kinect.getHeight());
+    }
     
     thresholdValue = 40;
     nearThreshold = 230;
@@ -160,12 +162,21 @@ void ofApp::setup(){
     userMesh.enableIndices();
     
     // Scale for the meshes to be slightly larger and centered in reference to the Kinect's field of view
-    // ofScale(1.25, 1.25);
-//      ofTranslate(500, 0);
+     ofScale(2, 2);
+//      ofTranslate(-500, 0);
     
-    light.enable();
-    light.setPosition(ofVec3f(100,100,200));
-    light.lookAt(ofVec3f(0,0,0));
+//    light.enable();
+//    light.setPosition(ofVec3f(100,100,200));
+//    light.lookAt(ofVec3f(0,0,0));
+    
+
+    bSphereVisualization = false;
+    if(bSphereVisualization){
+    ofDisableAlphaBlending();
+    ofEnableDepthTest();
+    ofDisableArbTex();
+    ofLoadImage(mTex,"texture.jpeg");
+    }
 
  }
 
@@ -235,6 +246,8 @@ void ofApp::draw(){
          drawPointCloud();
          easyCam.end();
     }
+    
+
 
         // Or draw depth (quick fix to generating blobs)
         // kinect.drawDepth(10, 10, ofGetWidth(), ofGetHeight());
@@ -246,6 +259,9 @@ void ofApp::draw(){
     ofColor centerColor = ofColor(85, 78, 68);
     ofColor edgeColor(0, 0, 0);
     ofBackgroundGradient(centerColor, edgeColor, OF_GRADIENT_CIRCULAR);
+    
+    ofTranslate(300, 0);
+
     
     // Start easy cam for manipulating static mesh (backgroundMesh) above
     if(bBackgroundMesh){
@@ -307,37 +323,37 @@ void ofApp::draw(){
             // And if that joint is seen on the user
             if(joint.isFound()){
                 
-                if(joint.getName() == "JOINT_TORSO"){
-                    color = ofColor::blueViolet;
-                } else if (joint.getName() == "JOINT_NECK"){
-                    color = ofColor::crimson;
-                } else if (joint.getName() == "JOINT_HEAD"){
-                    color = ofColor::darkGreen;
-                } else if (joint.getName() == "JOINT_LEFT_SHOULDER"){
-                    color = ofColor::darkCyan;
-                } else if (joint.getName() == "JOINT_LEFT_ELBOW"){
-                    color = ofColor::fuchsia;
-                } else if (joint.getName() == "JOINT_LEFT_HAND"){
-                    color = ofColor::dimGray;
-                } else if (joint.getName() == "JOINT_RIGHT_SHOULDER"){
-                    color = ofColor::goldenRod;
-                } else if (joint.getName() == "JOINT_RIGHT_ELBOW"){
-                    color = ofColor::hotPink;
-                } else if (joint.getName() == "JOINT_RIGHT_HAND"){
-                    color = ofColor::mediumTurquoise;
-                } else if (joint.getName() == "JOINT_LEFT_HIP"){
-                    color = ofColor::orangeRed;
-                } else if (joint.getName() == "JOINT_LEFT_KNEE"){
-                    color = ofColor::peachPuff;
-                } else if (joint.getName() == "JOINT_LEFT_FOOT"){
-                    color = ofColor::sienna;
-                } else if (joint.getName() == "JOINT_RIGHT_HIP"){
-                    color = ofColor::plum;
-                } else if (joint.getName() == "JOINT_RIGHT_KNEE"){
-                    color = ofColor::orchid;
-                } else if (joint.getName() == "JOINT_RIGHT_FOOT"){
-                    color = ofColor::olive;
-                }
+//                if(joint.getName() == "JOINT_TORSO"){
+//                    color = ofColor::blueViolet;
+//                } else if (joint.getName() == "JOINT_NECK"){
+//                    color = ofColor::crimson;
+//                } else if (joint.getName() == "JOINT_HEAD"){
+//                    color = ofColor::darkGreen;
+//                } else if (joint.getName() == "JOINT_LEFT_SHOULDER"){
+//                    color = ofColor::darkCyan;
+//                } else if (joint.getName() == "JOINT_LEFT_ELBOW"){
+//                    color = ofColor::fuchsia;
+//                } else if (joint.getName() == "JOINT_LEFT_HAND"){
+//                    color = ofColor::dimGray;
+//                } else if (joint.getName() == "JOINT_RIGHT_SHOULDER"){
+//                    color = ofColor::goldenRod;
+//                } else if (joint.getName() == "JOINT_RIGHT_ELBOW"){
+//                    color = ofColor::hotPink;
+//                } else if (joint.getName() == "JOINT_RIGHT_HAND"){
+//                    color = ofColor::mediumTurquoise;
+//                } else if (joint.getName() == "JOINT_LEFT_HIP"){
+//                    color = ofColor::orangeRed;
+//                } else if (joint.getName() == "JOINT_LEFT_KNEE"){
+//                    color = ofColor::peachPuff;
+//                } else if (joint.getName() == "JOINT_LEFT_FOOT"){
+//                    color = ofColor::sienna;
+//                } else if (joint.getName() == "JOINT_RIGHT_HIP"){
+//                    color = ofColor::plum;
+//                } else if (joint.getName() == "JOINT_RIGHT_KNEE"){
+//                    color = ofColor::orchid;
+//                } else if (joint.getName() == "JOINT_RIGHT_FOOT"){
+//                    color = ofColor::olive;
+//                }
                 
                 // And then we find the position of that joint, set it to the (image)vector we declared above, to draw a circle of radius 10 at that point
                 float x = joint.getProjectivePosition().x;
@@ -347,20 +363,6 @@ void ofApp::draw(){
                 
                 bodyJointPointCollection.push_back(jointPos);
                 
-                if(bodyJointPointCollection.size() > 0){
-                    // Play with adding depth to user generated mesh
-                    float z = ofRandom(-150, 150);
-                    // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
-                    ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
-                    // Make this piece of the mesh a randomized color
-                    // userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-                    // add color based on joint
-                    userMesh.addColor(color);
-                    // Add vertices to the user generated mesh
-                    userMesh.addVertex(bodyVertex);
-                    // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
-                    offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
-                }
 
                 // Draw a circle at each joint, if you're drawing the skeleton
                 if(bDrawnSkeleton){
@@ -463,10 +465,10 @@ void ofApp::draw(){
             for (int xX = 0; xX < 700; xX += 5){
                 
                 // This if statement has every possible point has a sound attached to it, and makes total cacophany (fun but annoying to my neighbors)
-                                if(xX < floor(handPosition.x) && floor(handPosition.x) < (xX + 5)) {
+//                                if(xX < floor(handPosition.x) && floor(handPosition.x) < (xX + 5)) {
                 
                 // If the position of the hand in space matches the given value of xX
-//                if(xX == floor(handPosition.x)) {
+                if(xX == floor(handPosition.x)) {
                 
                     // Then set the speed of the sound based on the hand's y position or based on the distance of the vectors from current from and 60 frames (1 second) ago.  Quick short movements results in extremely high pitched sounds, long slower movements results in slower, lower sounds.
                     //If the speed ends up negative, we can't play the sound, so rather than have pockets of empty positions with no sounds, we find the absolute value of the speed calculation.  We set the speed of the playback (as a workaround for pitch).
@@ -505,20 +507,7 @@ void ofApp::draw(){
                                     
                     // Creating the user generated mesh from joint positions during each frame
                     // As long as there are previous hand positions and joint positions to reference, create vertices based on last recorded hand and joint positions
-                    if(pointCollection.size() > 0){
-                        // Play with adding depth to user generated mesh
-                        float z = ofRandom(-150, 150);
-                        // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
-                        ofVec3f handVertex(pointCollection.back().x, pointCollection.back().y, z);
-                        // Make this piece of the mesh a randomized color
-                        // userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
-                        // add color based on joint
-                        userMesh.addColor(color);
-                        // Add vertices to the user generated mesh
-                        userMesh.addVertex(handVertex);
-                        // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
-                        offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
-                    }
+
                     
                 }
                 
@@ -527,6 +516,29 @@ void ofApp::draw(){
                     j += 1;
                 }else {
                     j = 0;
+                }
+                
+                if(bSphereVisualization){
+                    // N number of times, as long as we don't equal or surpass how many points of hand positions we have
+                    for (int n = 0; n < (mathVectors.size()); n ++){
+                        ofSpherePrimitive sphere;
+                        // Same as above but with the radius of the sphere
+                        radii.push_back(ofRandom(0, 1));
+                        // If we are creating a circle for the first time, give it that random radius, and draw the polyline going from 0 to 360 to make a circle.  Otherwise, save the radius as .1 larger than the last frame and set the color to the correlating n color, and draw it.
+                        if(n == (mathVectors.size() - 1)){
+                            sphere.setRadius(radii[n]);
+                            sphere.setPosition(mathVectors[n].x, mathVectors[n].y, 0);
+                        } else {
+                            radii[n] += 0.1;
+                            sphere.setRadius(radii[n]);
+                            sphere.setPosition(mathVectors[n].x, mathVectors[n].y, 0);
+                        }
+                        easyCam.begin();
+                        mTex.bind();
+                        sphere.draw();
+                        mTex.unbind();
+                        easyCam.end();
+                    }
                 }
             }
         }
@@ -555,6 +567,7 @@ void ofApp::draw(){
             }
          }
          
+         
           // Similiar logic as above, but with lines that come from a set position on the top of the screen and go down to the users hand position
          if(bLineVisualization){
              for (int n = 0; n < (pointCollection.size()); n ++){
@@ -574,7 +587,35 @@ void ofApp::draw(){
               }
          }
          
+         if(pointCollection.size() > 0){
+             // Play with adding depth to user generated mesh
+             float z = ofRandom(-150, 150);
+             // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
+             ofVec3f handVertex(pointCollection.back().x, pointCollection.back().y, z);
+             // Make this piece of the mesh a randomized color
+              userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+             // add color based on joint
+//             userMesh.addColor(color);
+             // Add vertices to the user generated mesh
+             userMesh.addVertex(handVertex);
+             // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
+             offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
+         }
 
+         if(bodyJointPointCollection.size() > 0){
+             // Play with adding depth to user generated mesh
+             float z = ofRandom(-150, 150);
+             // Create a vector based on the last position the hand was in and (potentially) the randomized depth, same for other body joints
+             ofVec3f bodyVertex(bodyJointPointCollection.back().x, bodyJointPointCollection.back().y, z);
+             // Make this piece of the mesh a randomized color
+              userMesh.addColor(ofColor(ofRandom(0,255),ofRandom(0,255),ofRandom(0,255)));
+             // add color based on joint
+//             userMesh.addColor(color);
+             // Add vertices to the user generated mesh
+             userMesh.addVertex(bodyVertex);
+             // Everytime a new vertex is created, so is a random combination of numbers for the offsets in update()
+             offsets.push_back(ofVec3f(ofRandom(0,100000), ofRandom(0,100000), ofRandom(0,100000)));
+         }
          
          // Connect user generated vertices through referencing and creating indicies, based on the connection distance between vertices
          float connectionDistance = 80;
@@ -593,6 +634,7 @@ void ofApp::draw(){
              }
          }
          
+
          
          userMesh.draw();
          ofPopMatrix();
@@ -662,7 +704,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 
 void ofApp::handEvent(ofxOpenNIGestureEvent & event){
     if(event.gestureName == "Wave"){
-        kinect.close();
+//        kinect.close();
     }
     
 }
